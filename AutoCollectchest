@@ -11,7 +11,7 @@ if not _G.ButtonImage then _G.ButtonImage = "rbxassetid://119752127243663" end
 if not getgenv().Setting then
     getgenv().Setting = {
         ["WhiteScreen"] = false,
-        ["TweenSpeed"] = 300,
+        ["TweenSpeed"] = 350, -- Aumentei levemente a velocidade padrão
         ["ChestLimit"] = 1000,
         ["ModFarm"] = {
             ["StopItemLegendary"] = true,
@@ -23,6 +23,10 @@ if not getgenv().Setting then
 end
 
 if not getgenv().Setting.ChestLimit then getgenv().Setting.ChestLimit = 1000 end
+
+-- [[ ESPERA O JOGO CARREGAR ]] --
+if not game:IsLoaded() then game.Loaded:Wait() end
+task.wait(2) -- Tempo reduzido
 
 -- [[ SERVIÇOS ]] --
 local Players = game:GetService("Players")
@@ -42,18 +46,18 @@ local CommF = Remotes:WaitForChild("CommF_")
 -- Variáveis de Controle
 local WasFightingBoss = false
 local ChestsCollected = 0
-local CurrentChest = nil 
 local LastMoney = 0 
 local PlaceID = game.PlaceId
+local ChestRetryCounter = 0 
 local World2 = PlaceID == 4442272183 or PlaceID == 79091703265657
 local World3 = PlaceID == 7449423635 or PlaceID == 100117331123089
+local CachedChest = nil -- Variável global para cache
 
--- [[ LOCAIS EXATOS (ATUALIZADO COM SEU CÓDIGO) ]] --
--- CFrame extraído do seu snippet: 3777.58618, 14.8764334, -3498.81909
+-- Locais de Spawn Boss
 local DarkbeardSpawn = CFrame.new(3777.58618, 14.8764334, -3498.81909)
 local IndraSpawn = CFrame.new(-5346.9, 423.9, -2725.1)
 
--- Inicializa dinheiro atual (Correção do contador de baús)
+-- Inicializa dinheiro atual
 task.spawn(function()
     if plr:FindFirstChild("Data") and plr.Data:FindFirstChild("Beli") then
         LastMoney = plr.Data.Beli.Value
@@ -61,6 +65,8 @@ task.spawn(function()
             if val > LastMoney then
                 if not WasFightingBoss and getgenv().ScriptActive then
                     ChestsCollected = ChestsCollected + 1
+                    -- Força reset do cache ao ganhar dinheiro (sinal que pegou baú)
+                    CachedChest = nil 
                     if UpdateChestCountFunc then UpdateChestCountFunc() end
                 end
             end
@@ -110,7 +116,7 @@ Title.BackgroundTransparency = 1
 Title.Size = UDim2.new(1,0,0,40)
 Title.Position = UDim2.new(0,0,0,5)
 Title.Font = Enum.Font.GothamBlack
-Title.Text = "NIGHT MYSTIC - CHEST V4 (DARKBEARD FIX)"
+Title.Text = "NIGHT MYSTIC - CONSTANT SCAN V6"
 Title.TextSize = 24
 Title.TextColor3 = Color3.fromRGB(255,0,0)
 Title.ZIndex = 2
@@ -233,18 +239,6 @@ function LogAction(text)
     LogBox.CanvasPosition = Vector2.new(0, 9999)
 end
 
-task.spawn(function()
-    while task.wait(0.5) do
-        if getgenv().ScriptActive then
-            StopBtn.Text = "STOP FARM"
-            StopBtn.BackgroundColor3 = Color3.fromRGB(200, 50, 50)
-        else
-            StopBtn.Text = "RESUME"
-            StopBtn.BackgroundColor3 = Color3.fromRGB(50, 200, 50)
-        end
-    end
-end)
-
 -- [[ LÓGICA ]] --
 
 plr.Idled:connect(function()
@@ -271,7 +265,7 @@ function MoveToPosition(TargetCF)
     local Speed = getgenv().Setting.TweenSpeed
     local Distance = (HRP.Position - TargetCF.Position).Magnitude
     
-    if Distance < 15 then HRP.CFrame = TargetCF return end
+    if Distance < 10 then HRP.CFrame = TargetCF return end
 
     local Time = Distance / Speed
     local BV = Instance.new("BodyVelocity", HRP)
@@ -296,7 +290,8 @@ function MoveToPosition(TargetCF)
     
     repeat 
         task.wait()
-        if CurrentChest and not CurrentChest.Parent then
+        -- Se o baú alvo desaparecer ou for coletado, cancela o tween para procurar o próximo imediatamente
+        if CachedChest and not CachedChest.Parent then
              if Tween then Tween:Cancel() end
              Completed = true
         end
@@ -334,32 +329,6 @@ function EquipTool(name)
     end
 end
 
--- Fast Attack (Simples e funcional)
-local Net = ReplicatedStorage:WaitForChild("Modules"):WaitForChild("Net")
-local RegisterHit = Net:WaitForChild("RE/RegisterHit")
-local RegisterAttack = Net:WaitForChild("RE/RegisterAttack")
-
-task.spawn(function()
-    while task.wait(0.1) do
-        if getgenv().ScriptActive then
-            pcall(function()
-                local char = plr.Character
-                if char and char:FindFirstChild("HumanoidRootPart") then
-                    local hrp = char.HumanoidRootPart
-                    for _, enemy in ipairs(workspace.Enemies:GetChildren()) do
-                        if enemy:FindFirstChild("Humanoid") and enemy.Humanoid.Health > 0 and enemy:FindFirstChild("HumanoidRootPart") then
-                            if (enemy.HumanoidRootPart.Position - hrp.Position).Magnitude < 60 then
-                                RegisterAttack:FireServer(0)
-                                RegisterHit:FireServer(enemy.HumanoidRootPart, {{enemy, enemy.HumanoidRootPart}})
-                            end
-                        end
-                    end
-                end
-            end)
-        end
-    end
-end)
-
 function HopServer()
     if not getgenv().ScriptActive then return end
     UpdateStatus("HOP SERVER...", Color3.fromRGB(0, 100, 255))
@@ -387,15 +356,14 @@ function HopServer()
     end
 end
 
--- Busca Otimizada
-local LastChestScan = 0
-local CachedChest = nil
-
+-- [[ BUSCA OTIMIZADA ]] --
 function GetClosestChest()
-    if tick() - LastChestScan < 1 and CachedChest and CachedChest.Parent then
+    -- Se já temos um baú na mira e ele existe, retorna ele (economia de CPU)
+    if CachedChest and CachedChest.Parent then
         return CachedChest
     end
 
+    -- Se não temos, VARREDURA TOTAL IMEDIATA
     local Character = plr.Character
     if not Character or not Character:FindFirstChild("HumanoidRootPart") then return nil end
     local RootPart = Character.HumanoidRootPart
@@ -403,6 +371,7 @@ function GetClosestChest()
     local MinDist = 999999
 
     for _, v in pairs(workspace:GetChildren()) do
+        -- Verifica apenas nomes que contêm Chest/Box e têm TouchInterest
         if (v.Name:find("Chest") or v.Name:find("Box")) and v:FindFirstChild("TouchInterest") then
             local dist = (v.Position - RootPart.Position).Magnitude
             if dist < MinDist then
@@ -412,7 +381,6 @@ function GetClosestChest()
         end
     end
     
-    LastChestScan = tick()
     CachedChest = Closest
     return Closest
 end
@@ -450,10 +418,10 @@ function ActivateIndraButtons()
     return allActive
 end
 
--- [[ LOOP PRINCIPAL ]] --
+-- [[ LOOP PRINCIPAL CONSTANTE ]] --
 task.spawn(function()
-    while task.wait() do
-        pcall(function()
+    while true do -- Loop infinito sem atraso fixo inicial
+        local success, err = pcall(function()
             if not getgenv().ScriptActive then 
                 UpdateStatus("SCRIPT PAUSADO", Color3.fromRGB(100, 100, 100))
                 task.wait(1)
@@ -461,7 +429,8 @@ task.spawn(function()
             end
             
             if not plr.Character or not plr.Character:FindFirstChild("HumanoidRootPart") or plr.Character.Humanoid.Health <= 0 then 
-                return -- Aguarda Respawn
+                task.wait(1)
+                return 
             end
             
             local Char = plr.Character
@@ -483,18 +452,15 @@ task.spawn(function()
                 BossLbl.Text = "Boss: None" 
             end
 
-            -- PROTEÇÃO CONTRA HOP ACIDENTAL AO MORRER
+            -- Se estava lutando e o Boss sumiu, verifica se deve dar Hop
             if not TargetBoss and WasFightingBoss then
                 local BossSpawn = World2 and DarkbeardSpawn or IndraSpawn
                 local DistToSpawn = (HRP.Position - BossSpawn.Position).Magnitude
                 
                 if DistToSpawn > 800 then
-                    UpdateStatus("Voltando para checar Boss...", Color3.fromRGB(255, 100, 0))
                     MoveToPosition(BossSpawn)
-                    task.wait(1)
                     return 
                 else
-                    LogAction("Boss derrotado/sumiu. Hop Server.")
                     WasFightingBoss = false
                     HopServer()
                     return
@@ -503,40 +469,36 @@ task.spawn(function()
 
             -- LÓGICA DE AÇÃO
             if TargetBoss and TargetBoss:FindFirstChild("Humanoid") and TargetBoss.Humanoid.Health > 0 then
-                UpdateStatus("MATANDO BOSS: " .. TargetBoss.Name, Color3.fromRGB(255, 50, 50))
-                
+                -- Luta contra Boss
                 EquipTool(getgenv().Setting.ModFarm.AutoEquipType)
                 if not Char:FindFirstChild("HasBuso") then CommF:InvokeServer("Buso") end
-
                 if TargetBoss:FindFirstChild("HumanoidRootPart") then
                     MoveToPosition(TargetBoss.HumanoidRootPart.CFrame * CFrame.new(0, 30, 0))
                 end
+                
+                -- Auto Attack simples
+                local enemyHRP = TargetBoss:FindFirstChild("HumanoidRootPart")
+                if enemyHRP and (enemyHRP.Position - HRP.Position).Magnitude < 60 then
+                     ReplicatedStorage.Modules.Net["RE/RegisterAttack"]:FireServer(0)
+                end
 
             elseif World3 and Chalice and getgenv().Setting.ModFarm.SummonKillRipIndra then
-                UpdateStatus("Cálice! Invocando Indra...", Color3.fromRGB(200, 200, 255))
+                -- Invocar Indra
                 WasFightingBoss = false
                 local ready = false
                 repeat ready = ActivateIndraButtons(); task.wait(0.5) until ready
                 EquipTool("God's Chalice")
                 MoveToPosition(IndraSpawn)
-                task.wait(1)
-                -- Tenta tocar no pedestal
+                task.wait(0.5)
                 local Pedestal = workspace.Map["Boat Castle"].Summoner:FindFirstChild("Circle")
                 if Pedestal then firetouchinterest(HRP, Pedestal, 0); firetouchinterest(HRP, Pedestal, 1) end
 
             elseif World2 and Fist and getgenv().Setting.ModFarm.SummonKillDarkbeard then
-                -- [[ CORREÇÃO CRÍTICA DO DARKBEARD ]] --
-                UpdateStatus("Fist! Indo invocar Darkbeard...", Color3.fromRGB(50, 50, 50))
+                -- Invocar Darkbeard
                 WasFightingBoss = false
-                
-                -- Usa o CFrame exato que você forneceu
                 EquipTool("Fist of Darkness")
                 MoveToPosition(DarkbeardSpawn)
-                
-                -- Quando estiver perto, tenta interagir agressivamente
                 if (HRP.Position - DarkbeardSpawn.Position).Magnitude < 15 then
-                    LogAction("Colocando Fist no Altar...")
-                    -- Procura o Altar ao redor
                     for _, v in pairs(workspace:GetDescendants()) do
                         if v:IsA("BasePart") and (v.Name == "Altar" or v.Name == "Table" or v.Name == "Center") then
                              if (v.Position - HRP.Position).Magnitude < 20 then
@@ -545,24 +507,20 @@ task.spawn(function()
                              end
                         end
                     end
-                    -- Clica também por garantia
                     VirtualUser:ClickButton1(Vector2.new())
                 end
 
             else
-                -- FARM DE BAÚS
+                -- FARM DE BAÚS (CONSTANT SCAN)
                 if HasLegendaryItem and getgenv().Setting.ModFarm.StopItemLegendary then
-                    UpdateStatus("ITEM LENDÁRIO NA MÃO! (PARADO)", Color3.fromRGB(255, 215, 0))
+                    UpdateStatus("ITEM LENDÁRIO NA MÃO!", Color3.fromRGB(255, 215, 0))
                     WasFightingBoss = false
-                    -- Sobe para segurança
                     if HRP.Position.Y < 100 then HRP.CFrame = HRP.CFrame * CFrame.new(0, 100, 0) end
                 else
                     WasFightingBoss = false
                     
                     if ChestsCollected >= getgenv().Setting.ChestLimit then
-                        UpdateStatus("LIMITE ATINGIDO! HOP...", Color3.fromRGB(0, 255, 0))
                         LogAction("Meta atingida. Trocando...")
-                        task.wait(1)
                         HopServer()
                         return
                     end
@@ -570,24 +528,44 @@ task.spawn(function()
                     local TargetChest = GetClosestChest()
                     
                     if TargetChest then
-                        CurrentChest = TargetChest
-                        UpdateStatus("Pegando Baú...", Color3.fromRGB(100, 255, 100))
+                        ChestRetryCounter = 0
+                        UpdateStatus("Pegando: " .. TargetChest.Name, Color3.fromRGB(100, 255, 100))
+                        
+                        -- Move até o baú
                         MoveToPosition(TargetChest.CFrame)
                         
+                        -- Tentativa de Coleta
                         if Char:FindFirstChild("HumanoidRootPart") and TargetChest.Parent then
                             if (Char.HumanoidRootPart.Position - TargetChest.Position).Magnitude < 15 then
                                 firetouchinterest(Char.HumanoidRootPart, TargetChest, 0)
                                 firetouchinterest(Char.HumanoidRootPart, TargetChest, 1)
-                                task.wait(0.2) 
+                                -- Limpa o cache IMEDIATAMENTE após tocar
+                                CachedChest = nil 
                             end
+                        else
+                            CachedChest = nil -- Baú sumiu enquanto ia
                         end
                     else
-                        UpdateStatus("Sem Baús no Server. Hop...", Color3.fromRGB(255, 150, 0))
-                        task.wait(2)
-                        HopServer()
+                        -- Se não achou baú, espera um pouco e conta
+                        ChestRetryCounter = ChestRetryCounter + 1
+                        UpdateStatus("Procurando baús... ("..ChestRetryCounter..")", Color3.fromRGB(255, 150, 0))
+                        task.wait(1) -- Espera 1s antes de procurar de novo se não achou NADA
+                        
+                        if ChestRetryCounter >= 10 then -- Reduzido para 10 tentativas (mais rápido)
+                            HopServer()
+                            ChestRetryCounter = 0
+                        end
                     end
                 end
             end
         end)
+        
+        if not success then 
+            warn("Erro no Loop: " .. tostring(err)) 
+            task.wait(1) 
+        end
+        
+        -- Loop muito rápido se tiver baú, um pouco mais lento se estiver ocioso
+        task.wait() 
     end
 end)
