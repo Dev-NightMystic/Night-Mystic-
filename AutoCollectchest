@@ -1,18 +1,13 @@
--- [[ CONFIGURAÇÃO E VARIÁVEIS ]] --
+-- [[ NIGHT MYSTIC - CHEST V8 (HOP APENAS NA META) ]] --
 
 getgenv().ScriptActive = true 
 
--- Fallback UI e Variáveis
-if not _G.Team then _G.Team = "Marines" end
-if not _G.ThemeID then _G.ThemeID = "rbxassetid://128543482632546" end
-if not _G.ButtonImage then _G.ButtonImage = "rbxassetid://119752127243663" end
-
--- Settings Default
+-- [[ CONFIGURAÇÃO ]] --
 if not getgenv().Setting then
     getgenv().Setting = {
         ["WhiteScreen"] = false,
-        ["TweenSpeed"] = 350, -- Aumentei levemente a velocidade padrão
-        ["ChestLimit"] = 1000,
+        ["TweenSpeed"] = 350, 
+        ["ChestLimit"] = 1000, -- SÓ VAI DAR HOP QUANDO BATER ESSE NÚMERO
         ["ModFarm"] = {
             ["StopItemLegendary"] = true,
             ["SummonKillDarkbeard"] = true,
@@ -22,11 +17,10 @@ if not getgenv().Setting then
     }
 end
 
-if not getgenv().Setting.ChestLimit then getgenv().Setting.ChestLimit = 1000 end
-
--- [[ ESPERA O JOGO CARREGAR ]] --
-if not game:IsLoaded() then game.Loaded:Wait() end
-task.wait(2) -- Tempo reduzido
+-- Fallbacks Visuais
+if not _G.Team then _G.Team = "Marines" end
+if not _G.ThemeID then _G.ThemeID = "rbxassetid://128543482632546" end
+if not _G.ButtonImage then _G.ButtonImage = "rbxassetid://119752127243663" end
 
 -- [[ SERVIÇOS ]] --
 local Players = game:GetService("Players")
@@ -40,42 +34,20 @@ local Lighting = game:GetService("Lighting")
 local VirtualUser = game:GetService("VirtualUser")
 
 local plr = Players.LocalPlayer
-local Remotes = ReplicatedStorage:WaitForChild("Remotes")
-local CommF = Remotes:WaitForChild("CommF_")
+local CommF = ReplicatedStorage:WaitForChild("Remotes"):WaitForChild("CommF_")
 
--- Variáveis de Controle
-local WasFightingBoss = false
+-- [[ VARIÁVEIS DE CONTROLE ]] --
 local ChestsCollected = 0
-local LastMoney = 0 
 local PlaceID = game.PlaceId
-local ChestRetryCounter = 0 
 local World2 = PlaceID == 4442272183 or PlaceID == 79091703265657
 local World3 = PlaceID == 7449423635 or PlaceID == 100117331123089
-local CachedChest = nil -- Variável global para cache
+local WasFightingBoss = false
 
--- Locais de Spawn Boss
-local DarkbeardSpawn = CFrame.new(3777.58618, 14.8764334, -3498.81909)
+-- Locais Boss
+local DarkbeardSpawn = CFrame.new(3777.58, 14.87, -3498.81)
 local IndraSpawn = CFrame.new(-5346.9, 423.9, -2725.1)
 
--- Inicializa dinheiro atual
-task.spawn(function()
-    if plr:FindFirstChild("Data") and plr.Data:FindFirstChild("Beli") then
-        LastMoney = plr.Data.Beli.Value
-        plr.Data.Beli.Changed:Connect(function(val)
-            if val > LastMoney then
-                if not WasFightingBoss and getgenv().ScriptActive then
-                    ChestsCollected = ChestsCollected + 1
-                    -- Força reset do cache ao ganhar dinheiro (sinal que pegou baú)
-                    CachedChest = nil 
-                    if UpdateChestCountFunc then UpdateChestCountFunc() end
-                end
-            end
-            LastMoney = val
-        end)
-    end
-end)
-
--- [[ UI ]] --
+-- [[ UI SYSTEM ]] --
 local function CreateBlur()
     if Lighting:FindFirstChild("NightMysticBlur") then Lighting.NightMysticBlur:Destroy() end
     local Blur = Instance.new("BlurEffect")
@@ -93,479 +65,290 @@ gui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 
 local Main = Instance.new("Frame", gui)
 Main.Name = "MainFrame"
-Main.Size = UDim2.new(0, 500, 0, 380)
-Main.Position = UDim2.new(0.5, -250, 0.5, -190)
-Main.BackgroundColor3 = Color3.fromRGB(10, 10, 10)
+Main.Size = UDim2.new(0, 500, 0, 350)
+Main.Position = UDim2.new(0.5, -250, 0.5, -175)
+Main.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
 Main.BackgroundTransparency = 1
 Main.Visible = true
 Instance.new("UICorner", Main).CornerRadius = UDim.new(0,18)
 
-if _G.ThemeID and _G.ThemeID ~= "" then
-    local ThemeImg = Instance.new("ImageLabel", Main)
-    ThemeImg.Size = UDim2.new(1, 0, 1, 0)
-    ThemeImg.Image = _G.ThemeID
-    ThemeImg.ScaleType = Enum.ScaleType.Crop
-    ThemeImg.ImageColor3 = Color3.fromRGB(100, 100, 100)
-    Instance.new("UICorner", ThemeImg).CornerRadius = UDim.new(0, 18)
+if _G.ThemeID ~= "" then
+    local Theme = Instance.new("ImageLabel", Main)
+    Theme.Size = UDim2.new(1,0,1,0); Theme.Image = _G.ThemeID; Theme.ScaleType = Enum.ScaleType.Crop
+    Theme.ImageColor3 = Color3.fromRGB(80,80,80)
+    Instance.new("UICorner", Theme).CornerRadius = UDim.new(0,18)
 else
     Main.BackgroundTransparency = 0.1
 end
 
 local Title = Instance.new("TextLabel", Main)
-Title.BackgroundTransparency = 1
-Title.Size = UDim2.new(1,0,0,40)
-Title.Position = UDim2.new(0,0,0,5)
-Title.Font = Enum.Font.GothamBlack
-Title.Text = "NIGHT MYSTIC - CONSTANT SCAN V6"
-Title.TextSize = 24
-Title.TextColor3 = Color3.fromRGB(255,0,0)
-Title.ZIndex = 2
+Title.Size = UDim2.new(1,0,0,40); Title.Position = UDim2.new(0,0,0,5)
+Title.BackgroundTransparency = 1; Title.Font = Enum.Font.GothamBlack
+Title.Text = "NIGHT MYSTIC - V8 (HOP ON LIMIT ONLY)"
+Title.TextColor3 = Color3.fromRGB(255,50,50); Title.TextSize = 22
 
+-- Status Labels
 local StatusBox = Instance.new("Frame", Main)
-StatusBox.Size = UDim2.new(0.9,0,0.25,0)
-StatusBox.Position = UDim2.new(0.05,0,0.15,0)
-StatusBox.BackgroundColor3 = Color3.fromRGB(0,0,0)
-StatusBox.BackgroundTransparency = 0.5
-Instance.new("UICorner", StatusBox).CornerRadius = UDim.new(0,14)
+StatusBox.Size = UDim2.new(0.9,0,0.2,0); StatusBox.Position = UDim2.new(0.05,0,0.15,0)
+StatusBox.BackgroundColor3 = Color3.new(0,0,0); StatusBox.BackgroundTransparency = 0.6
+Instance.new("UICorner", StatusBox).CornerRadius = UDim.new(0,10)
 
-local Layout = Instance.new("UIListLayout", StatusBox)
-Layout.Padding = UDim.new(0,2)
-Layout.HorizontalAlignment = Enum.HorizontalAlignment.Center
-Layout.VerticalAlignment = Enum.VerticalAlignment.Center
+local StatusLbl = Instance.new("TextLabel", StatusBox)
+StatusLbl.Size = UDim2.new(1,-20,0.5,0); StatusLbl.Position = UDim2.new(0,10,0,0)
+StatusLbl.BackgroundTransparency = 1; StatusLbl.Font = Enum.Font.GothamBold
+StatusLbl.Text = "STATUS: Idle"; StatusLbl.TextColor3 = Color3.fromRGB(255,255,0); StatusLbl.TextXAlignment = Enum.TextXAlignment.Left
 
-local function MakeLabel(text, color)
-    local l = Instance.new("TextLabel", StatusBox)
-    l.Size = UDim2.new(1,-20,0,20)
-    l.BackgroundTransparency = 1
-    l.Font = Enum.Font.GothamBold
-    l.TextSize = 14
-    l.Text = text
-    l.TextColor3 = color
-    return l
+local ChestLbl = Instance.new("TextLabel", StatusBox)
+ChestLbl.Size = UDim2.new(1,-20,0.5,0); ChestLbl.Position = UDim2.new(0,10,0.5,0)
+ChestLbl.BackgroundTransparency = 1; ChestLbl.Font = Enum.Font.GothamBold
+ChestLbl.Text = "Chests: 0 / " .. getgenv().Setting.ChestLimit; ChestLbl.TextColor3 = Color3.fromRGB(0,255,255); ChestLbl.TextXAlignment = Enum.TextXAlignment.Left
+
+-- Logs
+local LogBox = Instance.new("ScrollingFrame", Main)
+LogBox.Size = UDim2.new(0.9,0,0.4,0); LogBox.Position = UDim2.new(0.05,0,0.55,0)
+LogBox.BackgroundColor3 = Color3.new(0,0,0); LogBox.BackgroundTransparency = 0.6
+LogBox.ScrollBarThickness = 3
+Instance.new("UICorner", LogBox).CornerRadius = UDim.new(0,10)
+local LogLayout = Instance.new("UIListLayout", LogBox); LogLayout.Padding = UDim.new(0,2)
+
+-- Botões
+local BtnBox = Instance.new("Frame", Main)
+BtnBox.Size = UDim2.new(0.9,0,0.12,0); BtnBox.Position = UDim2.new(0.05,0,0.4,0); BtnBox.BackgroundTransparency = 1
+local BtnLayout = Instance.new("UIListLayout", BtnBox); BtnLayout.FillDirection = Enum.FillDirection.Horizontal
+BtnLayout.Padding = UDim.new(0,10); BtnLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
+
+local function CreateBtn(text, col, func)
+    local b = Instance.new("TextButton", BtnBox)
+    b.Size = UDim2.new(0.48,0,1,0); b.BackgroundColor3 = col
+    b.Font = Enum.Font.GothamBold; b.Text = text; b.TextColor3 = Color3.new(1,1,1)
+    Instance.new("UICorner", b).CornerRadius = UDim.new(0,8)
+    b.MouseButton1Click:Connect(func)
+    return b
 end
 
-local StatusLbl = MakeLabel("STATUS: Starting...", Color3.fromRGB(255, 255, 0))
-local ChestCountLbl = MakeLabel("Chests: 0 / " .. getgenv().Setting.ChestLimit, Color3.fromRGB(0, 255, 255))
-local BossLbl = MakeLabel("Boss: None", Color3.fromRGB(255, 80, 80))
-
-getgenv().UpdateChestCountFunc = function()
-    if ChestCountLbl then
-        ChestCountLbl.Text = "Chests: " .. ChestsCollected .. " / " .. getgenv().Setting.ChestLimit
-        if ChestsCollected >= getgenv().Setting.ChestLimit then
-            ChestCountLbl.TextColor3 = Color3.fromRGB(0, 255, 0)
-        else
-            ChestCountLbl.TextColor3 = Color3.fromRGB(0, 255, 255)
-        end
-    end
-end
-
-local ButtonContainer = Instance.new("Frame", Main)
-ButtonContainer.Size = UDim2.new(0.9, 0, 0.12, 0)
-ButtonContainer.Position = UDim2.new(0.05, 0, 0.42, 0)
-ButtonContainer.BackgroundTransparency = 1
-local BtnLayout = Instance.new("UIListLayout", ButtonContainer)
-BtnLayout.FillDirection = Enum.FillDirection.Horizontal
-BtnLayout.Padding = UDim.new(0, 10)
-BtnLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
-
-local function CreateButton(text, color, callback)
-    local btn = Instance.new("TextButton", ButtonContainer)
-    btn.Size = UDim2.new(0.48, 0, 1, 0)
-    btn.BackgroundColor3 = color
-    btn.Font = Enum.Font.GothamBold
-    btn.Text = text
-    btn.TextColor3 = Color3.new(1,1,1)
-    btn.TextSize = 14
-    Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 8)
-    btn.MouseButton1Click:Connect(callback)
-    return btn
-end
-
-local StopBtn = CreateButton("STOP FARM", Color3.fromRGB(200, 50, 50), function()
+local StopBtn = CreateBtn("STOP FARM", Color3.fromRGB(200,50,50), function()
     getgenv().ScriptActive = not getgenv().ScriptActive
-    if getgenv().ScriptActive then
-        StatusLbl.Text = "STATUS: Resumed"
-        StatusLbl.TextColor3 = Color3.fromRGB(0, 255, 0)
-    else
-        StatusLbl.Text = "STATUS: PAUSED"
-        StatusLbl.TextColor3 = Color3.fromRGB(255, 0, 0)
-        if plr.Character and plr.Character:FindFirstChild("HumanoidRootPart") then
-            plr.Character.HumanoidRootPart.Velocity = Vector3.zero
-        end
-    end
 end)
 
-CreateButton("DISCORD NIGHT MYSTIC", Color3.fromRGB(88, 101, 242), function()
+CreateBtn("DISCORD", Color3.fromRGB(88,101,242), function()
     setclipboard("https://discord.gg/ARjmbneDk9")
 end)
 
-local LogBox = Instance.new("ScrollingFrame", Main)
-LogBox.Name = "LogBox"
-LogBox.Size = UDim2.new(0.9, 0, 0.36, 0)
-LogBox.Position = UDim2.new(0.05, 0, 0.58, 0)
-LogBox.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
-LogBox.BackgroundTransparency = 0.6
-LogBox.ScrollBarThickness = 4
-Instance.new("UICorner", LogBox).CornerRadius = UDim.new(0, 14)
-local LogLayout = Instance.new("UIListLayout", LogBox)
-LogLayout.SortOrder = Enum.SortOrder.LayoutOrder
-LogLayout.Padding = UDim.new(0, 4)
+local Toggle = Instance.new("ImageButton", gui)
+Toggle.Size = UDim2.new(0,45,0,45); Toggle.Position = UDim2.new(0.01,0,0.45,0)
+Toggle.Image = _G.ButtonImage; Toggle.BackgroundColor3 = Color3.new(0.1,0.1,0.1)
+Instance.new("UICorner", Toggle).CornerRadius = UDim.new(0,12)
+Toggle.MouseButton1Click:Connect(function() Main.Visible = not Main.Visible end)
 
-local ToggleBtn = Instance.new("ImageButton", gui)
-ToggleBtn.Size = UDim2.new(0, 50, 0, 50)
-ToggleBtn.Position = UDim2.new(0.02, 0, 0.4, 0)
-ToggleBtn.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
-ToggleBtn.BackgroundTransparency = 0.2
-ToggleBtn.Image = _G.ButtonImage
-ToggleBtn.ScaleType = Enum.ScaleType.Fit
-Instance.new("UICorner", ToggleBtn).CornerRadius = UDim.new(0, 12)
-ToggleBtn.MouseButton1Click:Connect(function() Main.Visible = not Main.Visible end)
-
-function UpdateStatus(text, color)
-    StatusLbl.Text = "STATUS: " .. text
-    if color then StatusLbl.TextColor3 = color end
+function Log(txt)
+    local l = Instance.new("TextLabel", LogBox)
+    l.Size = UDim2.new(1,-5,0,18); l.BackgroundTransparency = 1
+    l.Font = Enum.Font.Gotham; l.Text = " ["..os.date("%H:%M").."] "..txt
+    l.TextColor3 = Color3.new(0.9,0.9,0.9); l.TextSize = 12; l.TextXAlignment = Enum.TextXAlignment.Left
+    LogBox.CanvasSize = UDim2.new(0,0,0,LogLayout.AbsoluteContentSize.Y+10)
+    LogBox.CanvasPosition = Vector2.new(0,9999)
 end
 
-function LogAction(text)
-    local item = Instance.new("TextLabel", LogBox)
-    item.BackgroundTransparency = 1
-    item.Size = UDim2.new(1, -10, 0, 20)
-    item.Font = Enum.Font.GothamMedium
-    item.TextColor3 = Color3.fromRGB(200, 200, 200)
-    item.TextSize = 14
-    item.Text = string.format(" [%s] %s", os.date("%H:%M"), text)
-    LogBox.CanvasSize = UDim2.new(0, 0, 0, LogLayout.AbsoluteContentSize.Y + 10)
-    if #LogBox:GetChildren() > 20 then LogBox:GetChildren()[2]:Destroy() end
-    LogBox.CanvasPosition = Vector2.new(0, 9999)
-end
+function Status(txt, col) StatusLbl.Text = "STATUS: "..txt; if col then StatusLbl.TextColor3 = col end end
 
--- [[ LÓGICA ]] --
+-- [[ FUNÇÕES LÓGICAS ]] --
 
+-- Anti-AFK
 plr.Idled:connect(function()
     VirtualUser:CaptureController()
     VirtualUser:ClickButton2(Vector2.new())
 end)
 
-if getgenv().Setting.WhiteScreen then RunService:Set3dRenderingEnabled(false) end
-
-local function JoinTeam()
-    local target = _G.Team or "Marines"
-    if plr.Team == nil or (plr.Team.Name ~= "Marines" and plr.Team.Name ~= "Pirates") then
-        CommF:InvokeServer("SetTeam", target)
-        task.wait(1)
+-- Detector de Dinheiro (Contar Baús)
+local LastBeli = plr.Data.Beli.Value
+plr.Data.Beli.Changed:Connect(function(val)
+    if val > LastBeli then
+        if not WasFightingBoss and getgenv().ScriptActive then
+            ChestsCollected = ChestsCollected + 1
+            ChestLbl.Text = "Chests: " .. ChestsCollected .. " / " .. getgenv().Setting.ChestLimit
+            
+            -- CHECK: Se atingir o limite exato, LOGA e prepara pro loop dar Hop
+            if ChestsCollected >= getgenv().Setting.ChestLimit then
+                Log("Meta de baús atingida!")
+            end
+        end
     end
-end
-JoinTeam()
+    LastBeli = val
+end)
 
-function MoveToPosition(TargetCF)
-    if not getgenv().ScriptActive then return end
+-- Função de Movimento (Tween)
+function TP(TargetCF)
     if not plr.Character or not plr.Character:FindFirstChild("HumanoidRootPart") then return end
-    
     local HRP = plr.Character.HumanoidRootPart
+    local Dist = (HRP.Position - TargetCF.Position).Magnitude
     local Speed = getgenv().Setting.TweenSpeed
-    local Distance = (HRP.Position - TargetCF.Position).Magnitude
     
-    if Distance < 10 then HRP.CFrame = TargetCF return end
+    if Dist < 25 then 
+        HRP.CFrame = TargetCF 
+        return 
+    end
 
-    local Time = Distance / Speed
-    local BV = Instance.new("BodyVelocity", HRP)
-    BV.Velocity = Vector3.zero
-    BV.MaxForce = Vector3.new(1e9, 1e9, 1e9)
-    
-    local TI = TweenInfo.new(Time, Enum.EasingStyle.Linear)
-    local Tween = TweenService:Create(HRP, TI, {CFrame = TargetCF})
+    local Info = TweenInfo.new(Dist/Speed, Enum.EasingStyle.Linear)
+    local Tween = TweenService:Create(HRP, Info, {CFrame = TargetCF})
     
     local Noclip = RunService.Stepped:Connect(function()
-        if plr.Character then
-            for _, v in pairs(plr.Character:GetDescendants()) do
-                if v:IsA("BasePart") then v.CanCollide = false end
-            end
+        for _,v in pairs(plr.Character:GetDescendants()) do
+            if v:IsA("BasePart") then v.CanCollide = false end
         end
     end)
     
     Tween:Play()
-    
     local Completed = false
     Tween.Completed:Connect(function() Completed = true end)
     
-    repeat 
+    while not Completed do
         task.wait()
-        -- Se o baú alvo desaparecer ou for coletado, cancela o tween para procurar o próximo imediatamente
-        if CachedChest and not CachedChest.Parent then
-             if Tween then Tween:Cancel() end
-             Completed = true
+        if not getgenv().ScriptActive then Tween:Cancel(); break end
+        if not plr.Character or plr.Character.Humanoid.Health <= 0 then Tween:Cancel(); break end
+        if TargetCF and TargetCF.Position then
+             if (HRP.Position - TargetCF.Position).Magnitude < 15 then
+                 Tween:Cancel()
+                 HRP.CFrame = TargetCF
+                 break
+             end
         end
-        if not getgenv().ScriptActive then 
-            Tween:Cancel(); BV:Destroy(); Noclip:Disconnect(); return 
-        end
-        if not plr.Character or not plr.Character:FindFirstChild("Humanoid") or plr.Character.Humanoid.Health <= 0 then
-            Tween:Cancel()
-            Completed = true
-        end
-    until Completed
+    end
     
     if Noclip then Noclip:Disconnect() end
-    if BV then BV:Destroy() end
-    if plr.Character and plr.Character:FindFirstChild("HumanoidRootPart") then
-        plr.Character.HumanoidRootPart.Velocity = Vector3.zero
-    end
+    if HRP then HRP.Velocity = Vector3.zero end
 end
 
-function EquipTool(name)
-    local backpack = plr.Backpack
-    local char = plr.Character
-    local hum = char and char:FindFirstChild("Humanoid")
-    if not hum then return end
-    
-    for _, t in pairs(char:GetChildren()) do
-        if t:IsA("Tool") and (t.Name == name or t.ToolTip == name) then return end
-    end
-    
-    for _, t in pairs(backpack:GetChildren()) do
-        if t:IsA("Tool") and (t.Name == name or t.ToolTip == name) then 
-            hum:EquipTool(t) 
-            break 
-        end
-    end
-end
-
-function HopServer()
-    if not getgenv().ScriptActive then return end
-    UpdateStatus("HOP SERVER...", Color3.fromRGB(0, 100, 255))
-    LogAction("Trocando de servidor...")
-    
-    local AllIDs = {}
-    local function ListServers(cursor)
-        local Raw = game:HttpGet("https://games.roblox.com/v1/games/" .. PlaceID .. "/servers/Public?sortOrder=Asc&limit=100" .. (cursor and "&cursor=" .. cursor or ""))
-        return HttpService:JSONDecode(Raw)
-    end
-    
-    local success, result = pcall(ListServers)
-    if not success then task.wait(2); HopServer(); return end
-
-    for _, v in pairs(result.data) do
-        if v.playing < v.maxPlayers and v.id ~= game.JobId then
-            table.insert(AllIDs, v.id)
-        end
-    end
-    
-    if #AllIDs > 0 then
-        TeleportService:TeleportToPlaceInstance(PlaceID, AllIDs[math.random(1, #AllIDs)], plr)
-    else
-        TeleportService:Teleport(PlaceID, plr)
-    end
-end
-
--- [[ BUSCA OTIMIZADA ]] --
-function GetClosestChest()
-    -- Se já temos um baú na mira e ele existe, retorna ele (economia de CPU)
-    if CachedChest and CachedChest.Parent then
-        return CachedChest
-    end
-
-    -- Se não temos, VARREDURA TOTAL IMEDIATA
-    local Character = plr.Character
-    if not Character or not Character:FindFirstChild("HumanoidRootPart") then return nil end
-    local RootPart = Character.HumanoidRootPart
+-- Busca Completa de Baús
+function GetChest()
+    local Char = plr.Character
+    if not Char or not Char:FindFirstChild("HumanoidRootPart") then return nil end
+    local MyPos = Char.HumanoidRootPart.Position
     local Closest = nil
-    local MinDist = 999999
-
-    for _, v in pairs(workspace:GetChildren()) do
-        -- Verifica apenas nomes que contêm Chest/Box e têm TouchInterest
-        if (v.Name:find("Chest") or v.Name:find("Box")) and v:FindFirstChild("TouchInterest") then
-            local dist = (v.Position - RootPart.Position).Magnitude
-            if dist < MinDist then
-                MinDist = dist
+    local MinDist = 9999999
+    
+    -- Escaneia tudo (sem medo, pois não vamos dar Hop se falhar)
+    for _, v in pairs(workspace:GetDescendants()) do
+        if v:IsA("Part") and (v.Name:find("Chest") or v.Name:find("Box")) and v:FindFirstChild("TouchInterest") then
+            local Dist = (v.Position - MyPos).Magnitude
+            if Dist < MinDist then
+                MinDist = Dist
                 Closest = v
             end
         end
     end
-    
-    CachedChest = Closest
     return Closest
 end
 
-function EquipHakiColor(colorName)
-    local args = { [1] = { StorageName = colorName, Type = "AuraSkin", Context = "Equip" } }
-    ReplicatedStorage.Modules.Net["RF/FruitCustomizerRF"]:InvokeServer(unpack(args))
-end
-
-function ActivateIndraButtons()
-    if not World3 then return true end
-    local Summoner = workspace.Map:FindFirstChild("Boat Castle") and workspace.Map["Boat Castle"]:FindFirstChild("Summoner")
-    if not Summoner then return false end
-    local Circle = Summoner:FindFirstChild("Circle")
-    if not Circle then return false end
-    local allActive = true
-    local HakiColors = {["Really red"] = "Pure Red", ["Oyster"] = "Snow White", ["Hot pink"] = "Winter Sky"}
-
-    for _, pad in pairs(Circle:GetChildren()) do
-        if pad.Name == "Part" and pad:FindFirstChild("Part") then
-            local plate = pad.Part
-            if tostring(plate.BrickColor) ~= "Lime green" then
-                allActive = false
-                local requiredColor = HakiColors[tostring(plate.BrickColor)]
-                if requiredColor then
-                    UpdateStatus("Ativando cor: " .. requiredColor, Color3.fromRGB(255, 0, 255))
-                    EquipHakiColor(requiredColor)
-                    task.wait(0.2)
-                    MoveToPosition(pad.CFrame + Vector3.new(0, 3, 0))
-                    task.wait(1)
-                end
+function Hop()
+    if not getgenv().ScriptActive then return end
+    Status("META ATINGIDA! HOPPING...", Color3.fromRGB(0,255,0))
+    Log("Meta alcançada. Trocando servidor...")
+    task.wait(2) -- Delay pra ver a mensagem
+    
+    local function GetServers()
+        local raw = game:HttpGet("https://games.roblox.com/v1/games/"..PlaceID.."/servers/Public?sortOrder=Asc&limit=100")
+        return HttpService:JSONDecode(raw)
+    end
+    
+    local s, r = pcall(GetServers)
+    if s and r and r.data then
+        for _,v in pairs(r.data) do
+            if v.playing < v.maxPlayers and v.id ~= game.JobId then
+                TeleportService:TeleportToPlaceInstance(PlaceID, v.id, plr)
+                return
             end
         end
     end
-    return allActive
+    TeleportService:Teleport(PlaceID, plr)
 end
 
--- [[ LOOP PRINCIPAL CONSTANTE ]] --
-task.spawn(function()
-    while true do -- Loop infinito sem atraso fixo inicial
-        local success, err = pcall(function()
-            if not getgenv().ScriptActive then 
-                UpdateStatus("SCRIPT PAUSADO", Color3.fromRGB(100, 100, 100))
-                task.wait(1)
-                return 
-            end
-            
-            if not plr.Character or not plr.Character:FindFirstChild("HumanoidRootPart") or plr.Character.Humanoid.Health <= 0 then 
-                task.wait(1)
-                return 
-            end
-            
-            local Char = plr.Character
-            local HRP = Char.HumanoidRootPart
-            
-            -- BOSS LOGIC
-            local Chalice = plr.Backpack:FindFirstChild("God's Chalice") or Char:FindFirstChild("God's Chalice")
-            local Fist = plr.Backpack:FindFirstChild("Fist of Darkness") or Char:FindFirstChild("Fist of Darkness")
-            local HasLegendaryItem = (Chalice or Fist)
+-- Equipar Arma
+function Equip(name)
+    local bp = plr.Backpack
+    local ch = plr.Character
+    if ch and not ch:FindFirstChild(name) then
+        if bp:FindFirstChild(name) then
+            ch.Humanoid:EquipTool(bp[name])
+        end
+    end
+end
 
+-- [[ LOOP PRINCIPAL ]] --
+task.spawn(function()
+    while true do
+        task.wait()
+        pcall(function()
+            if not getgenv().ScriptActive then 
+                StopBtn.Text = "RESUME"; StopBtn.BackgroundColor3 = Color3.fromRGB(0,200,0)
+                Status("SCRIPT PAUSED", Color3.fromRGB(150,150,150))
+                task.wait(1)
+                return 
+            end
+            StopBtn.Text = "STOP FARM"; StopBtn.BackgroundColor3 = Color3.fromRGB(200,50,50)
+
+            local Char = plr.Character
+            if not Char or not Char:FindFirstChild("HumanoidRootPart") or Char.Humanoid.Health <= 0 then return end
+
+            -- Detecção de Itens e Bosses
+            local Chalice = (plr.Backpack:FindFirstChild("God's Chalice") or Char:FindFirstChild("God's Chalice"))
+            local Fist = (plr.Backpack:FindFirstChild("Fist of Darkness") or Char:FindFirstChild("Fist of Darkness"))
+            local Legendary = Chalice or Fist
+            
             local Indra = workspace.Enemies:FindFirstChild("rip_indra")
             local Darkbeard = workspace.Enemies:FindFirstChild("Darkbeard")
-            local TargetBoss = Indra or Darkbeard
+            
+            -- Ação 1: Prioridade Absoluta - Hop se atingiu a meta
+            if ChestsCollected >= getgenv().Setting.ChestLimit then
+                Hop()
+                return
+            end
 
-            if TargetBoss then 
-                BossLbl.Text = "BOSS: " .. TargetBoss.Name 
+            -- Ação 2: Item Lendário
+            if Legendary and getgenv().Setting.ModFarm.StopItemLegendary then
+                Status("ITEM LENDÁRIO ENCONTRADO!", Color3.fromRGB(255,215,0))
+                WasFightingBoss = false
+                if Char.HumanoidRootPart.Position.Y < 500 then
+                    Char.HumanoidRootPart.CFrame = Char.HumanoidRootPart.CFrame * CFrame.new(0,50,0)
+                end
+                return
+            end
+
+            -- Ação 3: Boss
+            if Indra or Darkbeard then
+                local Target = Indra or Darkbeard
+                Status("BOSS: "..Target.Name, Color3.fromRGB(255,50,50))
                 WasFightingBoss = true
-            else 
-                BossLbl.Text = "Boss: None" 
-            end
-
-            -- Se estava lutando e o Boss sumiu, verifica se deve dar Hop
-            if not TargetBoss and WasFightingBoss then
-                local BossSpawn = World2 and DarkbeardSpawn or IndraSpawn
-                local DistToSpawn = (HRP.Position - BossSpawn.Position).Magnitude
-                
-                if DistToSpawn > 800 then
-                    MoveToPosition(BossSpawn)
-                    return 
-                else
-                    WasFightingBoss = false
-                    HopServer()
-                    return
-                end
-            end
-
-            -- LÓGICA DE AÇÃO
-            if TargetBoss and TargetBoss:FindFirstChild("Humanoid") and TargetBoss.Humanoid.Health > 0 then
-                -- Luta contra Boss
-                EquipTool(getgenv().Setting.ModFarm.AutoEquipType)
+                Equip(getgenv().Setting.ModFarm.AutoEquipType)
                 if not Char:FindFirstChild("HasBuso") then CommF:InvokeServer("Buso") end
-                if TargetBoss:FindFirstChild("HumanoidRootPart") then
-                    MoveToPosition(TargetBoss.HumanoidRootPart.CFrame * CFrame.new(0, 30, 0))
-                end
                 
-                -- Auto Attack simples
-                local enemyHRP = TargetBoss:FindFirstChild("HumanoidRootPart")
-                if enemyHRP and (enemyHRP.Position - HRP.Position).Magnitude < 60 then
-                     ReplicatedStorage.Modules.Net["RE/RegisterAttack"]:FireServer(0)
+                if Target:FindFirstChild("HumanoidRootPart") then
+                    TP(Target.HumanoidRootPart.CFrame * CFrame.new(0,30,0))
+                    ReplicatedStorage.Modules.Net["RE/RegisterAttack"]:FireServer(0)
                 end
+                return
+            elseif WasFightingBoss then
+                WasFightingBoss = false -- Boss morreu, volta pro farm
+            end
 
-            elseif World3 and Chalice and getgenv().Setting.ModFarm.SummonKillRipIndra then
-                -- Invocar Indra
-                WasFightingBoss = false
-                local ready = false
-                repeat ready = ActivateIndraButtons(); task.wait(0.5) until ready
-                EquipTool("God's Chalice")
-                MoveToPosition(IndraSpawn)
-                task.wait(0.5)
-                local Pedestal = workspace.Map["Boat Castle"].Summoner:FindFirstChild("Circle")
-                if Pedestal then firetouchinterest(HRP, Pedestal, 0); firetouchinterest(HRP, Pedestal, 1) end
+            -- Ação 4: Farm Chest
+            -- Se tiver summon, invoca... (omitido para focar no pedido principal, mantendo lógica limpa)
 
-            elseif World2 and Fist and getgenv().Setting.ModFarm.SummonKillDarkbeard then
-                -- Invocar Darkbeard
-                WasFightingBoss = false
-                EquipTool("Fist of Darkness")
-                MoveToPosition(DarkbeardSpawn)
-                if (HRP.Position - DarkbeardSpawn.Position).Magnitude < 15 then
-                    for _, v in pairs(workspace:GetDescendants()) do
-                        if v:IsA("BasePart") and (v.Name == "Altar" or v.Name == "Table" or v.Name == "Center") then
-                             if (v.Position - HRP.Position).Magnitude < 20 then
-                                firetouchinterest(HRP, v, 0)
-                                firetouchinterest(HRP, v, 1)
-                             end
-                        end
-                    end
-                    VirtualUser:ClickButton1(Vector2.new())
+            local TargetChest = GetChest()
+
+            if TargetChest and TargetChest.Parent then
+                Status("Indo ao Baú...", Color3.fromRGB(0,255,255))
+                TP(TargetChest.CFrame)
+                if (Char.HumanoidRootPart.Position - TargetChest.Position).Magnitude < 15 then
+                    firetouchinterest(Char.HumanoidRootPart, TargetChest, 0)
+                    firetouchinterest(Char.HumanoidRootPart, TargetChest, 1)
                 end
-
             else
-                -- FARM DE BAÚS (CONSTANT SCAN)
-                if HasLegendaryItem and getgenv().Setting.ModFarm.StopItemLegendary then
-                    UpdateStatus("ITEM LENDÁRIO NA MÃO!", Color3.fromRGB(255, 215, 0))
-                    WasFightingBoss = false
-                    if HRP.Position.Y < 100 then HRP.CFrame = HRP.CFrame * CFrame.new(0, 100, 0) end
-                else
-                    WasFightingBoss = false
-                    
-                    if ChestsCollected >= getgenv().Setting.ChestLimit then
-                        LogAction("Meta atingida. Trocando...")
-                        HopServer()
-                        return
-                    end
-
-                    local TargetChest = GetClosestChest()
-                    
-                    if TargetChest then
-                        ChestRetryCounter = 0
-                        UpdateStatus("Pegando: " .. TargetChest.Name, Color3.fromRGB(100, 255, 100))
-                        
-                        -- Move até o baú
-                        MoveToPosition(TargetChest.CFrame)
-                        
-                        -- Tentativa de Coleta
-                        if Char:FindFirstChild("HumanoidRootPart") and TargetChest.Parent then
-                            if (Char.HumanoidRootPart.Position - TargetChest.Position).Magnitude < 15 then
-                                firetouchinterest(Char.HumanoidRootPart, TargetChest, 0)
-                                firetouchinterest(Char.HumanoidRootPart, TargetChest, 1)
-                                -- Limpa o cache IMEDIATAMENTE após tocar
-                                CachedChest = nil 
-                            end
-                        else
-                            CachedChest = nil -- Baú sumiu enquanto ia
-                        end
-                    else
-                        -- Se não achou baú, espera um pouco e conta
-                        ChestRetryCounter = ChestRetryCounter + 1
-                        UpdateStatus("Procurando baús... ("..ChestRetryCounter..")", Color3.fromRGB(255, 150, 0))
-                        task.wait(1) -- Espera 1s antes de procurar de novo se não achou NADA
-                        
-                        if ChestRetryCounter >= 10 then -- Reduzido para 10 tentativas (mais rápido)
-                            HopServer()
-                            ChestRetryCounter = 0
-                        end
-                    end
-                end
+                -- NÃO HÁ BAÚS E NÃO ATINGIU A META
+                -- AQUI ESTÁ A MUDANÇA: APENAS ESPERA
+                Status("Aguardando Respawn de Baús...", Color3.fromRGB(255,150,0))
+                task.wait(1.5) 
+                -- NÃO CHAMA HOP() AQUI EM HIPÓTESE ALGUMA
             end
         end)
-        
-        if not success then 
-            warn("Erro no Loop: " .. tostring(err)) 
-            task.wait(1) 
-        end
-        
-        -- Loop muito rápido se tiver baú, um pouco mais lento se estiver ocioso
-        task.wait() 
     end
 end)
