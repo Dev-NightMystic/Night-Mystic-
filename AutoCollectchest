@@ -2,16 +2,17 @@
 
 getgenv().ScriptActive = true 
 
--- Fallback UI
+-- Fallback UI e Variáveis
 if not _G.Team then _G.Team = "Marines" end
 if not _G.ThemeID then _G.ThemeID = "rbxassetid://128543482632546" end
 if not _G.ButtonImage then _G.ButtonImage = "rbxassetid://119752127243663" end
 
--- Settings Default (Sem MaxTimeServer)
+-- Settings Default
 if not getgenv().Setting then
     getgenv().Setting = {
         ["WhiteScreen"] = false,
         ["TweenSpeed"] = 300,
+        ["ChestLimit"] = 1000, -- Valor padrão caso esqueça de configurar
         ["ModFarm"] = {
             ["StopItemLegendary"] = true,
             ["SummonKillDarkbeard"] = true,
@@ -20,6 +21,9 @@ if not getgenv().Setting then
         }
     }
 end
+
+-- Garante que ChestLimit exista
+if not getgenv().Setting.ChestLimit then getgenv().Setting.ChestLimit = 1000 end
 
 -- [[ SERVIÇOS ]] --
 local Players = game:GetService("Players")
@@ -38,6 +42,8 @@ local CommF = Remotes:WaitForChild("CommF_")
 
 -- Variáveis de Controle
 local WasFightingBoss = false
+local ChestsCollected = 0
+local CurrentChest = nil -- Para rastrear o baú atual
 local PlaceID = game.PlaceId
 local World2 = PlaceID == 4442272183 or PlaceID == 79091703265657
 local World3 = PlaceID == 7449423635 or PlaceID == 100117331123089
@@ -85,14 +91,14 @@ Title.BackgroundTransparency = 1
 Title.Size = UDim2.new(1,0,0,40)
 Title.Position = UDim2.new(0,0,0,5)
 Title.Font = Enum.Font.GothamBlack
-Title.Text = "NIGHT MYSTIC - HOP & BOSS"
+Title.Text = "NIGHT MYSTIC - CHEST V2"
 Title.TextSize = 24
 Title.TextColor3 = Color3.fromRGB(255,0,0)
 Title.ZIndex = 2
 
 -- Status Box
 local StatusBox = Instance.new("Frame", Main)
-StatusBox.Size = UDim2.new(0.9,0,0.20,0)
+StatusBox.Size = UDim2.new(0.9,0,0.25,0) -- Aumentei um pouco para caber o contador
 StatusBox.Position = UDim2.new(0.05,0,0.15,0)
 StatusBox.BackgroundColor3 = Color3.fromRGB(0,0,0)
 StatusBox.BackgroundTransparency = 0.5
@@ -115,13 +121,13 @@ local function MakeLabel(text, color)
 end
 
 local StatusLbl = MakeLabel("STATUS: Starting...", Color3.fromRGB(255, 255, 0))
-local TimerLbl = MakeLabel("Time Limit: OFF", Color3.fromRGB(80, 255, 255))
+local ChestCountLbl = MakeLabel("Chests: 0 / " .. getgenv().Setting.ChestLimit, Color3.fromRGB(0, 255, 255)) -- Novo Label
 local BossLbl = MakeLabel("Boss: None", Color3.fromRGB(255, 80, 80))
 
 -- Botões
 local ButtonContainer = Instance.new("Frame", Main)
 ButtonContainer.Size = UDim2.new(0.9, 0, 0.12, 0)
-ButtonContainer.Position = UDim2.new(0.05, 0, 0.38, 0)
+ButtonContainer.Position = UDim2.new(0.05, 0, 0.42, 0) -- Ajuste de posição
 ButtonContainer.BackgroundTransparency = 1
 local BtnLayout = Instance.new("UIListLayout", ButtonContainer)
 BtnLayout.FillDirection = Enum.FillDirection.Horizontal
@@ -166,8 +172,8 @@ end)
 -- Log
 local LogBox = Instance.new("ScrollingFrame", Main)
 LogBox.Name = "LogBox"
-LogBox.Size = UDim2.new(0.9, 0, 0.40, 0)
-LogBox.Position = UDim2.new(0.05, 0, 0.54, 0)
+LogBox.Size = UDim2.new(0.9, 0, 0.36, 0) -- Ajuste de tamanho
+LogBox.Position = UDim2.new(0.05, 0, 0.58, 0)
 LogBox.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
 LogBox.BackgroundTransparency = 0.6
 LogBox.ScrollBarThickness = 4
@@ -190,6 +196,15 @@ ToggleBtn.MouseButton1Click:Connect(function() Main.Visible = not Main.Visible e
 function UpdateStatus(text, color)
     StatusLbl.Text = "STATUS: " .. text
     if color then StatusLbl.TextColor3 = color end
+end
+
+function UpdateChestCount()
+    ChestCountLbl.Text = "Chests: " .. ChestsCollected .. " / " .. getgenv().Setting.ChestLimit
+    if ChestsCollected >= getgenv().Setting.ChestLimit then
+        ChestCountLbl.TextColor3 = Color3.fromRGB(0, 255, 0)
+    else
+        ChestCountLbl.TextColor3 = Color3.fromRGB(0, 255, 255)
+    end
 end
 
 function LogAction(text)
@@ -268,6 +283,13 @@ function MoveToPosition(TargetCF)
     
     repeat 
         task.wait()
+        -- Verificação se o baú foi coletado DURANTE o tween
+        if CurrentChest and not CurrentChest.Parent then
+             -- O baú sumiu enquanto voávamos
+             if Tween then Tween:Cancel() end
+             Completed = true
+        end
+
         if not getgenv().ScriptActive then 
             Tween:Cancel(); BV:Destroy(); Noclip:Disconnect(); return 
         end
@@ -303,7 +325,7 @@ function EquipTool(name)
     if tool then hum:EquipTool(tool) end
 end
 
--- Fast Attack
+-- Fast Attack (Mantido)
 local Net = ReplicatedStorage:WaitForChild("Modules"):WaitForChild("Net")
 local RegisterHit = Net:WaitForChild("RE/RegisterHit")
 local RegisterAttack = Net:WaitForChild("RE/RegisterAttack")
@@ -334,6 +356,8 @@ function HopServer()
     UpdateStatus("HOP SERVER...", Color3.fromRGB(0, 100, 255))
     LogAction("Trocando de servidor...")
     
+    -- Salva o progresso/reset se necessário? Por enquanto o script reseta o contador ao mudar de server.
+    
     local AllIDs = {}
     local function ListServers(cursor)
         local Raw = game:HttpGet("https://games.roblox.com/v1/games/" .. PlaceID .. "/servers/Public?sortOrder=Asc&limit=100" .. (cursor and "&cursor=" .. cursor or ""))
@@ -356,18 +380,28 @@ function HopServer()
     end
 end
 
+-- Nova função otimizada para pegar baú global
 function GetClosestChest()
     local Character = plr.Character
     if not Character or not Character:FindFirstChild("HumanoidRootPart") then return nil end
     local RootPart = Character.HumanoidRootPart
     local Chests = {}
+    
+    -- Varredura Global: GetDescendants no Workspace todo (pode ser pesado, mas garante encontrar todos)
     for _, v in pairs(workspace:GetDescendants()) do
-        if v:IsA("Part") and (string.find(v.Name, "Chest") or string.find(v.Name, "Box")) and v:FindFirstChild("TouchInterest") then
+        if v:IsA("Part") and (v.Name:find("Chest") or v.Name:find("Box")) and v:FindFirstChild("TouchInterest") then
+            -- Verifica se já não pegamos esse (opcional, mas o TouchInterest geralmente some)
             table.insert(Chests, v)
         end
     end
+    
     if #Chests == 0 then return nil end
-    table.sort(Chests, function(a, b) return (a.Position - RootPart.Position).Magnitude < (b.Position - RootPart.Position).Magnitude end)
+    
+    -- Ordena pelo mais próximo
+    table.sort(Chests, function(a, b) 
+        return (a.Position - RootPart.Position).Magnitude < (b.Position - RootPart.Position).Magnitude 
+    end)
+    
     return Chests[1]
 end
 
@@ -417,6 +451,8 @@ task.spawn(function()
             if not plr.Character or not plr.Character:FindFirstChild("HumanoidRootPart") then return end
             
             local Char = plr.Character
+            
+            -- BOSS LOGIC (Mantida)
             local Chalice = plr.Backpack:FindFirstChild("God's Chalice") or Char:FindFirstChild("God's Chalice")
             local Fist = plr.Backpack:FindFirstChild("Fist of Darkness") or Char:FindFirstChild("Fist of Darkness")
             local HasLegendaryItem = (Chalice or Fist)
@@ -427,14 +463,15 @@ task.spawn(function()
 
             if TargetBoss then BossLbl.Text = "BOSS: " .. TargetBoss.Name else BossLbl.Text = "Boss: None" end
 
+            -- Lógica para trocar se o boss morrer
             if not TargetBoss and WasFightingBoss then
                 LogAction("Boss derrotado/sumiu! Trocando de servidor.")
                 WasFightingBoss = false
                 HopServer()
                 return
             end
-            
-            -- LÓGICA DE AÇÃO
+
+            -- LÓGICA DE AÇÃO PRINCIPAL
             if TargetBoss and TargetBoss:FindFirstChild("Humanoid") and TargetBoss.Humanoid.Health > 0 then
                 WasFightingBoss = true
                 UpdateStatus("MATANDO BOSS: " .. TargetBoss.Name, Color3.fromRGB(255, 50, 50))
@@ -463,25 +500,52 @@ task.spawn(function()
                 task.wait(2)
 
             else
+                -- LÓGICA DE BAÚS ATUALIZADA
                 if HasLegendaryItem and getgenv().Setting.ModFarm.StopItemLegendary then
                     UpdateStatus("ITEM LENDÁRIO NA MÃO! (PARADO)", Color3.fromRGB(255, 215, 0))
                     WasFightingBoss = false
                 else
                     WasFightingBoss = false
+                    
+                    -- 1. Verifica Limite de Baús
+                    if ChestsCollected >= getgenv().Setting.ChestLimit then
+                        UpdateStatus("LIMITE ATINGIDO! HOP...", Color3.fromRGB(0, 255, 0))
+                        LogAction("Coletou " .. ChestsCollected .. " baús. Trocando...")
+                        task.wait(1)
+                        HopServer()
+                        return
+                    end
+
+                    -- 2. Busca Baú
                     local TargetChest = GetClosestChest()
+                    
                     if TargetChest then
+                        CurrentChest = TargetChest
                         UpdateStatus("Pegando Baú...", Color3.fromRGB(100, 255, 100))
+                        
+                        -- Vai até o baú
                         MoveToPosition(TargetChest.CFrame)
-                        if (Char.HumanoidRootPart.Position - TargetChest.Position).Magnitude < 10 then
-                            firetouchinterest(Char.HumanoidRootPart, TargetChest, 0)
-                            firetouchinterest(Char.HumanoidRootPart, TargetChest, 1)
+                        
+                        -- Tenta coletar
+                        if Char:FindFirstChild("HumanoidRootPart") and TargetChest.Parent then
+                            if (Char.HumanoidRootPart.Position - TargetChest.Position).Magnitude < 15 then
+                                firetouchinterest(Char.HumanoidRootPart, TargetChest, 0)
+                                firetouchinterest(Char.HumanoidRootPart, TargetChest, 1)
+                                task.wait(0.1)
+                                
+                                -- Verifica se coletou
+                                if not TargetChest.Parent then
+                                    ChestsCollected = ChestsCollected + 1
+                                    UpdateChestCount()
+                                    LogAction("Baú coletado ("..ChestsCollected..")")
+                                end
+                            end
                         end
                     else
-                        -- [[ ATENÇÃO ]]
-                        -- É aqui que ele troca de servidor se não tiver baú.
-                        UpdateStatus("Sem Baús. Procurando...", Color3.fromRGB(255, 150, 0))
+                        -- Sem baús no servidor
+                        UpdateStatus("Sem Baús no Server. Hop...", Color3.fromRGB(255, 150, 0))
                         task.wait(1.5)
-                        if not GetClosestChest() then HopServer() end
+                        HopServer()
                     end
                 end
             end
