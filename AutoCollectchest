@@ -2,17 +2,16 @@
 
 getgenv().ScriptActive = true 
 
--- Define padrões caso o Loader não tenha enviado (Fallback)
+-- Fallback UI
 if not _G.Team then _G.Team = "Marines" end
 if not _G.ThemeID then _G.ThemeID = "rbxassetid://128543482632546" end
 if not _G.ButtonImage then _G.ButtonImage = "rbxassetid://119752127243663" end
 
--- Define configurações padrão apenas se o Loader não tiver definido
+-- Settings Default (Sem MaxTimeServer)
 if not getgenv().Setting then
     getgenv().Setting = {
         ["WhiteScreen"] = false,
         ["TweenSpeed"] = 300,
-        ["MaxTimeServer"] = 900,
         ["ModFarm"] = {
             ["StopItemLegendary"] = true,
             ["SummonKillDarkbeard"] = true,
@@ -38,7 +37,6 @@ local Remotes = ReplicatedStorage:WaitForChild("Remotes")
 local CommF = Remotes:WaitForChild("CommF_")
 
 -- Variáveis de Controle
-local ServerStartTime = tick()
 local WasFightingBoss = false
 local PlaceID = game.PlaceId
 local World2 = PlaceID == 4442272183 or PlaceID == 79091703265657
@@ -117,7 +115,7 @@ local function MakeLabel(text, color)
 end
 
 local StatusLbl = MakeLabel("STATUS: Starting...", Color3.fromRGB(255, 255, 0))
-local TimerLbl = MakeLabel("Time Left: Checking...", Color3.fromRGB(80, 255, 255))
+local TimerLbl = MakeLabel("Time Limit: OFF", Color3.fromRGB(80, 255, 255))
 local BossLbl = MakeLabel("Boss: None", Color3.fromRGB(255, 80, 80))
 
 -- Botões
@@ -435,23 +433,8 @@ task.spawn(function()
                 HopServer()
                 return
             end
-
-            local TimeElapsed = tick() - ServerStartTime
-            local TimeLeft = math.floor(getgenv().Setting.MaxTimeServer - TimeElapsed)
             
-            if HasLegendaryItem then
-                TimerLbl.Text = "Time: PAUSED (ITEM)"
-            elseif TargetBoss then
-                 TimerLbl.Text = "Time: PAUSED (BOSS)"
-            else
-                TimerLbl.Text = "Time Left: " .. TimeLeft .. "s"
-                if TimeElapsed > getgenv().Setting.MaxTimeServer then
-                    LogAction("Tempo limite atingido!")
-                    HopServer()
-                    return
-                end
-            end
-
+            -- LÓGICA DE AÇÃO
             if TargetBoss and TargetBoss:FindFirstChild("Humanoid") and TargetBoss.Humanoid.Health > 0 then
                 WasFightingBoss = true
                 UpdateStatus("MATANDO BOSS: " .. TargetBoss.Name, Color3.fromRGB(255, 50, 50))
@@ -494,6 +477,8 @@ task.spawn(function()
                             firetouchinterest(Char.HumanoidRootPart, TargetChest, 1)
                         end
                     else
+                        -- [[ ATENÇÃO ]]
+                        -- É aqui que ele troca de servidor se não tiver baú.
                         UpdateStatus("Sem Baús. Procurando...", Color3.fromRGB(255, 150, 0))
                         task.wait(1.5)
                         if not GetClosestChest() then HopServer() end
