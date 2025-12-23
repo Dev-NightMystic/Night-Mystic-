@@ -1,52 +1,262 @@
--- [[ 2. PARTE INTERNA: LÓGICA DO SCRIPT ]] --
+-- [[ PARTE INTERNA - LÓGICA DO SCRIPT ]] --
 
--- Serviços
+-- Configurações Visuais Padrão (Internas)
+if not _G.ThemeID then _G.ThemeID = "rbxassetid://128543482632546" end
+if not _G.ButtonImage then _G.ButtonImage = "rbxassetid://119752127243663" end
+
+-- [[ SERVIÇOS E VARIÁVEIS ]] --
 local Players = game:GetService("Players")
-local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local TweenService = game:GetService("TweenService")
 local RunService = game:GetService("RunService")
-local Workspace = game:GetService("Workspace")
-local CoreGui = game:GetService("StarterGui")
-local TeleportService = game:GetService("TeleportService")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local HttpService = game:GetService("HttpService")
+local TeleportService = game:GetService("TeleportService")
+local CoreGui = game:GetService("CoreGui")
+local Lighting = game:GetService("Lighting")
+local VirtualUser = game:GetService("VirtualUser")
 
 local plr = Players.LocalPlayer
 local Remotes = ReplicatedStorage:WaitForChild("Remotes")
 local CommF = Remotes:WaitForChild("CommF_")
+
+-- Validação de Segurança (Evita erro se esquecer a config)
+if not getgenv().Setting then
+    warn("Configurações não encontradas! Usando padrão.")
+    getgenv().Setting = {
+        ["WhiteScreen"] = false,
+        ["TweenSpeed"] = 300,
+        ["ModFarm"] = {["StopItemLegendary"]=true, ["SummonKillDarkbeard"]=true, ["SummonKillRipIndra"]=true}
+    }
+end
+
+-- Anti-AFK
+plr.Idled:connect(function()
+    VirtualUser:CaptureController()
+    VirtualUser:ClickButton2(Vector2.new())
+end)
 
 -- Detecção de Mundo
 local PlaceID = game.PlaceId
 local World2 = PlaceID == 4442272183 or PlaceID == 79091703265657
 local World3 = PlaceID == 7449423635 or PlaceID == 100117331123089
 
--- Otimização
+-- Otimização (Tela Branca)
 if getgenv().Setting.WhiteScreen then
     RunService:Set3dRenderingEnabled(false)
 end
 
--- UI Visual
-local ScreenGui = Instance.new("ScreenGui")
-ScreenGui.Name = "SlimeXFixed_Indra"
-ScreenGui.Parent = game.CoreGui
-local MainFrame = Instance.new("Frame")
-MainFrame.Size = UDim2.new(0, 250, 0, 60)
-MainFrame.Position = UDim2.new(0.5, -125, 0.1, 0)
-MainFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
-MainFrame.BorderSizePixel = 0
-MainFrame.Parent = ScreenGui
+-- [[ INTERFACE (UI) ]] --
 
-local Title = Instance.new("TextLabel")
-Title.Size = UDim2.new(1, 0, 1, 0)
-Title.BackgroundTransparency = 1
-Title.Text = "Carregando..."
-Title.TextSize = 18
-Title.TextColor3 = Color3.fromRGB(255, 255, 255)
-Title.Parent = MainFrame
-
-function UpdateStatus(text)
-    Title.Text = text
+local function CreateBlur()
+    if Lighting:FindFirstChild("NightMysticBlur") then Lighting.NightMysticBlur:Destroy() end
+    local Blur = Instance.new("BlurEffect")
+    Blur.Name = "NightMysticBlur"
+    Blur.Size = 20
+    Blur.Parent = Lighting
 end
 
--- [[ SISTEMA DE BUSCA DE BAÚS (CORRIGIDO) ]] --
+if CoreGui:FindFirstChild("SlimeX_ChestUI") then CoreGui.SlimeX_ChestUI:Destroy() end
+CreateBlur()
+
+local gui = Instance.new("ScreenGui", CoreGui)
+gui.Name = "SlimeX_ChestUI"
+gui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+
+local Main = Instance.new("Frame", gui)
+Main.Name = "MainFrame"
+Main.Size = UDim2.new(0, 500, 0, 350)
+Main.Position = UDim2.new(0.5, -250, 0.5, -175)
+Main.BackgroundColor3 = Color3.fromRGB(10, 10, 10)
+Main.BackgroundTransparency = 1
+Main.Visible = true
+Instance.new("UICorner", Main).CornerRadius = UDim.new(0,18)
+
+-- Tema de Fundo
+if _G.ThemeID and _G.ThemeID ~= "" then
+    local ThemeImg = Instance.new("ImageLabel", Main)
+    ThemeImg.Size = UDim2.new(1, 0, 1, 0)
+    ThemeImg.Image = _G.ThemeID
+    ThemeImg.ScaleType = Enum.ScaleType.Crop
+    ThemeImg.ImageColor3 = Color3.fromRGB(100, 100, 100)
+    Instance.new("UICorner", ThemeImg).CornerRadius = UDim.new(0, 18)
+else
+    Main.BackgroundTransparency = 0.1
+end
+
+-- Caixa de Status
+local StatusBox = Instance.new("Frame", Main)
+StatusBox.Size = UDim2.new(0.9,0,0.25,0)
+StatusBox.Position = UDim2.new(0.05,0,0.20,0)
+StatusBox.BackgroundColor3 = Color3.fromRGB(0,0,0)
+StatusBox.BackgroundTransparency = 0.5
+Instance.new("UICorner", StatusBox).CornerRadius = UDim.new(0,14)
+
+local Layout = Instance.new("UIListLayout", StatusBox)
+Layout.Padding = UDim.new(0,6)
+Layout.HorizontalAlignment = Enum.HorizontalAlignment.Center
+Layout.VerticalAlignment = Enum.VerticalAlignment.Center
+
+local function MakeLabel(text, color)
+    local l = Instance.new("TextLabel", StatusBox)
+    l.Size = UDim2.new(1,-20,0,24)
+    l.BackgroundTransparency = 1
+    l.Font = Enum.Font.GothamBold
+    l.TextSize = 16
+    l.Text = text
+    l.TextColor3 = color
+    return l
+end
+
+local StatusLbl = MakeLabel("STATUS: Starting...", Color3.fromRGB(255, 255, 0))
+local ChestsLbl = MakeLabel("Chests Found: 0", Color3.fromRGB(80, 255, 80))
+local BossLbl = MakeLabel("Boss: None", Color3.fromRGB(255, 80, 80))
+
+-- Caixa de Log
+local LogBox = Instance.new("ScrollingFrame", Main)
+LogBox.Name = "LogBox"
+LogBox.Size = UDim2.new(0.9, 0, 0.40, 0)
+LogBox.Position = UDim2.new(0.05, 0, 0.50, 0)
+LogBox.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+LogBox.BackgroundTransparency = 0.6
+LogBox.ScrollBarThickness = 4
+Instance.new("UICorner", LogBox).CornerRadius = UDim.new(0, 14)
+local LogLayout = Instance.new("UIListLayout", LogBox)
+LogLayout.SortOrder = Enum.SortOrder.LayoutOrder
+LogLayout.Padding = UDim.new(0, 4)
+
+-- Título
+local Title = Instance.new("TextLabel", Main)
+Title.BackgroundTransparency = 1
+Title.Size = UDim2.new(1,0,0,50)
+Title.Position = UDim2.new(0,0,0,10)
+Title.Font = Enum.Font.GothamBlack
+Title.Text = "AUTO CHEST & BOSS"
+Title.TextSize = 30
+Title.TextColor3 = Color3.fromRGB(255,0,0)
+Title.ZIndex = 2
+
+-- Botão Toggle (Abrir/Fechar)
+local ToggleBtn = Instance.new("ImageButton", gui)
+ToggleBtn.Size = UDim2.new(0, 50, 0, 50)
+ToggleBtn.Position = UDim2.new(0.02, 0, 0.4, 0)
+ToggleBtn.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+ToggleBtn.BackgroundTransparency = 0.2
+ToggleBtn.Image = _G.ButtonImage
+ToggleBtn.ScaleType = Enum.ScaleType.Fit
+Instance.new("UICorner", ToggleBtn).CornerRadius = UDim.new(0, 12)
+ToggleBtn.MouseButton1Click:Connect(function() Main.Visible = not Main.Visible end)
+
+-- Funções de Atualização da UI
+local chestCount = 0
+function UpdateStatus(text, color)
+    StatusLbl.Text = "STATUS: " .. text
+    if color then StatusLbl.TextColor3 = color end
+end
+
+function LogAction(text)
+    local item = Instance.new("TextLabel", LogBox)
+    item.BackgroundTransparency = 1
+    item.Size = UDim2.new(1, -10, 0, 20)
+    item.Font = Enum.Font.GothamMedium
+    item.TextColor3 = Color3.fromRGB(200, 200, 200)
+    item.TextSize = 14
+    item.Text = string.format(" [%s] %s", os.date("%H:%M:%S"), text)
+    LogBox.CanvasSize = UDim2.new(0, 0, 0, LogLayout.AbsoluteContentSize.Y + 10)
+    if #LogBox:GetChildren() > 20 then
+        LogBox:GetChildren()[2]:Destroy()
+    end
+    LogBox.CanvasPosition = Vector2.new(0, 9999)
+end
+
+-- [[ SISTEMA DE SELEÇÃO DE TIME ]] --
+local function JoinTeam()
+    local targetTeam = "Marines"
+    if _G.Team == "Pirates" or _G.Team == "Pirate" then targetTeam = "Pirates" end
+    
+    if plr.Team == nil or (plr.Team.Name ~= "Marines" and plr.Team.Name ~= "Pirates") then
+        UpdateStatus("Entrando no Time: " .. targetTeam)
+        pcall(function()
+            CommF:InvokeServer("SetTeam", targetTeam)
+        end)
+        task.wait(1)
+    end
+end
+JoinTeam()
+
+-- [[ SISTEMA DE TWEEN ]] --
+function MoveToPosition(TargetCF)
+    if not plr.Character or not plr.Character:FindFirstChild("HumanoidRootPart") then return end
+    local HRP = plr.Character.HumanoidRootPart
+    
+    local Speed = getgenv().Setting.TweenSpeed or 300
+    local Distance = (HRP.Position - TargetCF.Position).Magnitude
+    
+    if Distance < 30 then
+        HRP.CFrame = TargetCF
+        return
+    end
+
+    local Time = Distance / Speed
+    local BV = Instance.new("BodyVelocity", HRP)
+    BV.Velocity = Vector3.zero
+    BV.MaxForce = Vector3.new(1e9, 1e9, 1e9)
+    
+    local TI = TweenInfo.new(Time, Enum.EasingStyle.Linear)
+    local Tween = TweenService:Create(HRP, TI, {CFrame = TargetCF})
+    
+    local NoclipConn
+    NoclipConn = RunService.Stepped:Connect(function()
+        if plr.Character then
+            for _, v in pairs(plr.Character:GetDescendants()) do
+                if v:IsA("BasePart") then v.CanCollide = false end
+            end
+        end
+    end)
+    
+    Tween:Play()
+    Tween.Completed:Wait()
+    
+    if NoclipConn then NoclipConn:Disconnect() end
+    if BV then BV:Destroy() end
+    HRP.Velocity = Vector3.zero
+end
+
+-- [[ UTILITÁRIOS ]] --
+function EquipTool(name)
+    local backpack = plr.Backpack
+    local char = plr.Character
+    local tool = backpack:FindFirstChild(name) or char:FindFirstChild(name)
+    if tool and char and char:FindFirstChild("Humanoid") then
+        char.Humanoid:EquipTool(tool)
+    end
+end
+
+-- Fast Attack
+local Net = ReplicatedStorage:WaitForChild("Modules"):WaitForChild("Net")
+local RegisterHit = Net:WaitForChild("RE/RegisterHit")
+local RegisterAttack = Net:WaitForChild("RE/RegisterAttack")
+
+task.spawn(function()
+    while task.wait(0.1) do
+        pcall(function()
+            local char = plr.Character
+            if not char then return end
+            local hrp = char:FindFirstChild("HumanoidRootPart")
+            if not hrp then return end
+
+            for _, enemy in ipairs(workspace.Enemies:GetChildren()) do
+                if enemy:FindFirstChild("Humanoid") and enemy.Humanoid.Health > 0 and enemy:FindFirstChild("HumanoidRootPart") then
+                    if (enemy.HumanoidRootPart.Position - hrp.Position).Magnitude < 60 then
+                         RegisterAttack:FireServer(0)
+                         RegisterHit:FireServer(enemy.HumanoidRootPart, {{enemy, enemy.HumanoidRootPart}})
+                    end
+                end
+            end
+        end)
+    end
+end)
+
+-- Busca de Baús
 function GetClosestChest()
     local Character = plr.Character
     if not Character or not Character:FindFirstChild("HumanoidRootPart") then return nil end
@@ -71,136 +281,9 @@ function GetClosestChest()
     return Chests[1]
 end
 
--- [[ LÓGICA DO FAST ATTACK ]] --
-local Net = ReplicatedStorage:WaitForChild("Modules"):WaitForChild("Net")
-local RegisterHit = Net:WaitForChild("RE/RegisterHit")
-local RegisterAttack = Net:WaitForChild("RE/RegisterAttack")
-
-local HIT_FUNCTION
-task.defer(function()
-    local PlayerScripts = plr:WaitForChild("PlayerScripts")
-    local LocalScript = PlayerScripts:FindFirstChildOfClass("LocalScript")
-    while not LocalScript do
-        PlayerScripts.ChildAdded:Wait()
-        LocalScript = PlayerScripts:FindFirstChildOfClass("LocalScript")
-    end
-    if getsenv then
-        local ok, ScriptEnv = pcall(getsenv, LocalScript)
-        if ok and ScriptEnv then
-            HIT_FUNCTION = ScriptEnv._G.SendHitsToServer
-        end
-    end
-end)
-
-local FastAttackEnabled = true
-local CPS = 15
-local Range = 60
-
-local function RunFastAttack()
-    pcall(function()
-        if not FastAttackEnabled then return end
-        local char = plr.Character
-        if not char or not char:FindFirstChild("HumanoidRootPart") then return end
-
-        local hrp = char.HumanoidRootPart
-        local enemiesFolder = Workspace:FindFirstChild("Enemies")
-        if not enemiesFolder then return end
-        
-        for _, enemy in ipairs(enemiesFolder:GetChildren()) do
-            local hum = enemy:FindFirstChild("Humanoid")
-            local root = enemy:FindFirstChild("HumanoidRootPart")
-            if hum and hum.Health > 0 and root and (root.Position - hrp.Position).Magnitude <= Range then
-                local targets = {{enemy, root}}
-                pcall(function()
-                    if HIT_FUNCTION then HIT_FUNCTION(root, targets) else RegisterHit:FireServer(root, targets) end
-                    RegisterAttack:FireServer(0)
-                end)
-                break
-            end
-        end
-    end)
-end
-
-task.spawn(function()
-    while task.wait(1/CPS) do RunFastAttack() end
-end)
-
--- [[ UTILITÁRIOS ]] --
-function EquipTool(name)
-    local backpack = plr.Backpack
-    local char = plr.Character
-    local tool = backpack:FindFirstChild(name) or char:FindFirstChild(name)
-    if tool and char and char:FindFirstChild("Humanoid") then
-        char.Humanoid:EquipTool(tool)
-    end
-end
-
-function TP(cframe)
-    local char = plr.Character
-    if char and char:FindFirstChild("HumanoidRootPart") then
-        char.HumanoidRootPart.CFrame = cframe
-    end
-end
-
--- [[ LÓGICA DE CORES DE HAKI E BOTÕES (RIP INDRA) - RESTAURADA ]] --
-local HakiColors = {
-    ["Really red"] = "Pure Red",
-    ["Oyster"] = "Snow White",
-    ["Hot pink"] = "Winter Sky"
-}
-
-function EquipHakiColor(colorName)
-    local args = { [1] = { StorageName = colorName, Type = "AuraSkin", Context = "Equip" } }
-    ReplicatedStorage.Modules.Net["RF/FruitCustomizerRF"]:InvokeServer(unpack(args))
-end
-
-function ActivateIndraButtons()
-    if not World3 then return true end -- Se não for Sea 3, ignora
-    
-    local Summoner = workspace.Map:FindFirstChild("Boat Castle") and workspace.Map["Boat Castle"]:FindFirstChild("Summoner")
-    if not Summoner then return false end
-    
-    local Circle = Summoner:FindFirstChild("Circle")
-    if not Circle then return false end
-
-    local allActive = true
-
-    for _, pad in pairs(Circle:GetChildren()) do
-        if pad.Name == "Part" and pad:FindFirstChild("Part") then
-            local plate = pad.Part
-            -- Se a cor NÃO for Verde Limão, significa que precisa ativar
-            if tostring(plate.BrickColor) ~= "Lime green" then
-                allActive = false
-                local requiredColor = HakiColors[tostring(plate.BrickColor)]
-                
-                if requiredColor then
-                    UpdateStatus("Ativando Botão: " .. requiredColor)
-                    
-                    -- 1. Equipa a cor
-                    EquipHakiColor(requiredColor)
-                    task.wait(0.3)
-                    
-                    -- 2. Ativa o Haki (Buso) se estiver desligado
-                    if not plr.Character:FindFirstChild("HasBuso") then
-                        CommF:InvokeServer("Buso")
-                    end
-                    task.wait(0.3)
-                    
-                    -- 3. Teleporta para o botão
-                    TP(pad.CFrame + Vector3.new(0, 3, 0))
-                    task.wait(1.5) -- Espera um pouco para registrar o toque
-                else
-                    UpdateStatus("Cor desconhecida no botão!")
-                end
-            end
-        end
-    end
-    return allActive
-end
-
--- [[ SERVER HOP ]] --
+-- Server Hop
 function HopServer()
-    UpdateStatus("Procurando servidor...")
+    UpdateStatus("Trocando de Server...", Color3.fromRGB(0, 100, 255))
     local AllIDs = {}
     local function ListServers(cursor)
         local Raw = game:HttpGet("https://games.roblox.com/v1/games/" .. PlaceID .. "/servers/Public?sortOrder=Asc&limit=100" .. (cursor and "&cursor=" .. cursor or ""))
@@ -217,102 +300,137 @@ function HopServer()
     if #AllIDs > 0 then
         TeleportService:TeleportToPlaceInstance(PlaceID, AllIDs[math.random(1, #AllIDs)], plr)
     else
-        UpdateStatus("Server Hop falhou, retentando...")
         TeleportService:Teleport(PlaceID, plr)
     end
 end
 
--- [[ LÓGICA PRINCIPAL (LOOP) ]] --
+-- [[ LÓGICA DE BOSS ]] --
 local ProcessingBoss = false
-local ChestRetries = 0
 
-spawn(function()
+function EquipHakiColor(colorName)
+    local args = { [1] = { StorageName = colorName, Type = "AuraSkin", Context = "Equip" } }
+    ReplicatedStorage.Modules.Net["RF/FruitCustomizerRF"]:InvokeServer(unpack(args))
+end
+
+function ActivateIndraButtons()
+    if not World3 then return true end
+    local Summoner = workspace.Map:FindFirstChild("Boat Castle") and workspace.Map["Boat Castle"]:FindFirstChild("Summoner")
+    if not Summoner then return false end
+    
+    local Circle = Summoner:FindFirstChild("Circle")
+    if not Circle then return false end
+
+    local allActive = true
+    local HakiColors = {["Really red"] = "Pure Red", ["Oyster"] = "Snow White", ["Hot pink"] = "Winter Sky"}
+
+    for _, pad in pairs(Circle:GetChildren()) do
+        if pad.Name == "Part" and pad:FindFirstChild("Part") then
+            local plate = pad.Part
+            if tostring(plate.BrickColor) ~= "Lime green" then
+                allActive = false
+                local requiredColor = HakiColors[tostring(plate.BrickColor)]
+                if requiredColor then
+                    UpdateStatus("Ativando Botão Indra...", Color3.fromRGB(255, 0, 255))
+                    EquipHakiColor(requiredColor)
+                    task.wait(0.2)
+                    MoveToPosition(pad.CFrame + Vector3.new(0, 3, 0))
+                    task.wait(1)
+                end
+            end
+        end
+    end
+    return allActive
+end
+
+task.spawn(function()
+    while task.wait(1) do
+        local Indra = workspace.Enemies:FindFirstChild("rip_indra")
+        local Darkbeard = workspace.Enemies:FindFirstChild("Darkbeard")
+        
+        if Indra or Darkbeard then
+            local Target = Indra or Darkbeard
+            if Target and Target:FindFirstChild("HumanoidRootPart") and Target.Humanoid.Health > 0 then
+                ProcessingBoss = true
+                BossLbl.Text = "BOSS ATIVO: " .. Target.Name
+                UpdateStatus("Matando " .. Target.Name, Color3.fromRGB(255, 0, 0))
+                
+                EquipTool("Melee")
+                MoveToPosition(Target.HumanoidRootPart.CFrame * CFrame.new(0, 10, 0))
+                
+                if not plr.Character:FindFirstChild("HasBuso") then
+                    CommF:InvokeServer("Buso")
+                end
+            end
+        else
+            ProcessingBoss = false
+            BossLbl.Text = "Boss: None"
+        end
+    end
+end)
+
+-- [[ LOOP PRINCIPAL ]] --
+task.spawn(function()
     while task.wait() do
         pcall(function()
+            if ProcessingBoss then return end
+            
             local Char = plr.Character
             if not Char or not Char:FindFirstChild("HumanoidRootPart") then return end
-            
-            -- Verifica Inventário
+
             local Chalice = plr.Backpack:FindFirstChild("God's Chalice") or Char:FindFirstChild("God's Chalice")
             local Fist = plr.Backpack:FindFirstChild("Fist of Darkness") or Char:FindFirstChild("Fist of Darkness")
-            
-            if ProcessingBoss then return end -- Pausa loop principal se estiver lidando com Boss
 
-            -- >> 1. LÓGICA SEA 3 (Rip Indra + Haki) <<
+            -- Lógica Rip Indra
             if World3 and Chalice and getgenv().Setting.ModFarm.SummonKillRipIndra then
                 ProcessingBoss = true
-                UpdateStatus("Cálice detectado! Verificando Haki...")
+                UpdateStatus("Cálice Encontrado! Iniciando Indra...", Color3.fromRGB(255, 255, 255))
+                LogAction("God's Chalice encontrado!")
                 
-                -- Loop até ativar todos os botões
                 local buttonsReady = false
                 repeat 
                     buttonsReady = ActivateIndraButtons()
-                    task.wait(1)
+                    task.wait(0.5)
                 until buttonsReady
                 
-                UpdateStatus("Botões Verdes! Invocando Indra...")
                 EquipTool("God's Chalice")
-                TP(CFrame.new(-5346.9, 423.9, -2725.1)) -- Local do pedestal
-                task.wait(2) -- Tempo para o jogador clicar ou o auto-click (se tiver) funcionar
-                -- Nota: O script posiciona você no pedestal. Você precisa clicar ou ter um auto-click.
+                MoveToPosition(CFrame.new(-5346.9, 423.9, -2725.1))
+                task.wait(3)
                 
-            -- >> 2. LÓGICA SEA 2 (Barba Negra) <<
+            -- Lógica Darkbeard
             elseif World2 and Fist and getgenv().Setting.ModFarm.SummonKillDarkbeard then
                 ProcessingBoss = true
-                UpdateStatus("Fist detectado! Indo para Arena...")
-                EquipTool("Fist of Darkness")
-                TP(CFrame.new(3777.58, 14.87, -3498.81))
+                UpdateStatus("Fist Encontrado! Iniciando Darkbeard...", Color3.fromRGB(0, 0, 0))
+                LogAction("Fist of Darkness encontrado!")
                 
-            -- >> 3. AUTO CHEST COM BUFFER <<
+                EquipTool("Fist of Darkness")
+                MoveToPosition(CFrame.new(3777.58, 14.87, -3498.81))
+                task.wait(3)
+                
+            -- Farm de Baú
             else
                 local TargetChest = GetClosestChest()
                 
                 if TargetChest then
-                    ChestRetries = 0 
-                    UpdateStatus("Coletando: " .. TargetChest.Name)
-                    Char:PivotTo(TargetChest:GetPivot())
-                    firetouchinterest(Char.HumanoidRootPart, TargetChest, 0)
-                    firetouchinterest(Char.HumanoidRootPart, TargetChest, 1)
-                else
-                    -- Contagem regressiva antes de trocar de server
-                    ChestRetries = ChestRetries + 1
-                    UpdateStatus("Procurando baús... (" .. ChestRetries .. "/25)")
+                    UpdateStatus("Indo até: " .. TargetChest.Name, Color3.fromRGB(255, 255, 0))
+                    MoveToPosition(TargetChest.CFrame)
                     
-                    if ChestRetries >= 25 then -- Aprox 5 segundos tentando achar baú
-                        UpdateStatus("Sem baús. Trocando servidor...")
-                        task.wait(1)
+                    if Char:FindFirstChild("HumanoidRootPart") then
+                        Char.HumanoidRootPart.CFrame = TargetChest.CFrame
+                        firetouchinterest(Char.HumanoidRootPart, TargetChest, 0)
+                        firetouchinterest(Char.HumanoidRootPart, TargetChest, 1)
+                        
+                        task.wait(0.1)
+                        if not TargetChest:FindFirstChild("TouchInterest") or not TargetChest.Parent then
+                            chestCount = chestCount + 1
+                            ChestsLbl.Text = "Chests Farmed: " .. chestCount
+                        end
+                    end
+                else
+                    UpdateStatus("Sem baús próximos. Procurando...", Color3.fromRGB(255, 100, 0))
+                    task.wait(1.5)
+                    if not GetClosestChest() then
                         HopServer()
                     end
-                    task.wait(0.2) 
-                end
-            end
-        end)
-    end
-end)
-
--- [[ LOOP DE BOSS (Auto Kill + Posicionamento) ]] --
-spawn(function()
-    while task.wait(0.5) do
-        pcall(function()
-            local Indra = workspace.Enemies:FindFirstChild("rip_indra")
-            local Darkbeard = workspace.Enemies:FindFirstChild("Darkbeard")
-            
-            if Indra or Darkbeard then
-                ProcessingBoss = true
-                local Target = Indra or Darkbeard
-                
-                if Target and Target:FindFirstChild("HumanoidRootPart") and Target.Humanoid.Health > 0 then
-                    UpdateStatus("Boss Ativo: " .. Target.Name)
-                    EquipTool("Melee") 
-                    -- TP seguro acima da cabeça do boss
-                    TP(Target.HumanoidRootPart.CFrame * CFrame.new(0, 15, 0))
-                    
-                    -- Garante Haki ativo
-                    if not plr.Character:FindFirstChild("HasBuso") then
-                        CommF:InvokeServer("Buso")
-                    end
-                else
-                    ProcessingBoss = false
                 end
             end
         end)
