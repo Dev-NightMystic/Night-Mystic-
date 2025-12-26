@@ -362,7 +362,7 @@ function Library:NewWindow(ConfigWindow)
 
 	LogoHub.Size = UDim2.new(0, 40, 0, 35)
 
-	LogoHub.Image = "rbxassetid://4911164158"
+	LogoHub.Image = "rbxassetid://105245380363493"
 
 	Desc.Name = "Desc"
 
