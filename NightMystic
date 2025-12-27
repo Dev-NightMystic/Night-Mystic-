@@ -1,1 +1,9 @@
+pcall(function()
+    local args = {
+        [1] = "SetTeam",
+        [2] = "Marines"
+    }
+    game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer(unpack(args))
+end)
+task.wait(1)
 loadstring(game:HttpGet("https://pandadevelopment.net/virtual/file/e0b6c14cbe5900b3"))()
