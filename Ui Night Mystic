@@ -135,185 +135,119 @@ end
 function Library:NewWindow(ConfigWindow)
 
 	local ConfigWindow = self:MakeConfig({
-
 		Title = "Night Mystic v2",
-
 		Description = "By araujozwx & Mauro",
-
 	}, ConfigWindow or {})
 
 	local TeddyUI_Premium = Instance.new("ScreenGui")
-
 	local DropShadowHolder = Instance.new("Frame")
-
 	local DropShadow = Instance.new("ImageLabel")
-
-	local Main = Instance.new("Frame")
-
+	
+	-- [MODIFICAÇÃO] Main agora é ImageLabel para aceitar o Tema
+	local Main = Instance.new("ImageLabel")
+	
 	local UICorner = Instance.new("UICorner")
-
 	local Top = Instance.new("Frame")
-
 	local Line = Instance.new("Frame")
-
 	local Left = Instance.new("Folder")
-
 	local NameHub = Instance.new("TextLabel")
-
 	local LogoHub = Instance.new("ImageLabel")
-
 	local Desc = Instance.new("TextLabel")
-
 	local Right = Instance.new("Folder")
-
 	local Frame = Instance.new("Frame")
-
 	local UIListLayout = Instance.new("UIListLayout")
-
 	local UIPadding = Instance.new("UIPadding")
-
 	local Minize = Instance.new("TextButton")
-
 	local Icon = Instance.new("ImageLabel")
-
 	local Large = Instance.new("TextButton")
-
 	local Icon_2 = Instance.new("ImageLabel")
-
 	local Close = Instance.new("TextButton")
-
 	local Icon_3 = Instance.new("ImageLabel")
-
 	local UIStroke = Instance.new("UIStroke")
-
 	local TabFrame = Instance.new("Frame")
-
 	local Line_2 = Instance.new("Frame")
-
 	local SearchFrame = Instance.new("Frame")
-
 	local UICorner_2 = Instance.new("UICorner")
-
 	local IconSearch = Instance.new("ImageLabel")
-
 	local SearchBox = Instance.new("TextBox")
-
 	local ScrollingTab = Instance.new("ScrollingFrame")
-
 	local UIPadding_2 = Instance.new("UIPadding")
-
 	local UIListLayout_2 = Instance.new("UIListLayout")
-
 	local LayoutFrame = Instance.new("Frame")
-
 	local RealLayout = Instance.new("Frame")
-
 	local LayoutList = Instance.new("Folder")
-
 	local UIPageLayout = Instance.new("UIPageLayout")
-
 	local LayoutName = Instance.new("Frame")
-
 	local TextLabel = Instance.new("TextLabel")
-
 	local DropdownZone = Instance.new("Frame")
 
 	TeddyUI_Premium.Name = "TeddyUI_Premium"
-
 	TeddyUI_Premium.Parent = game.Players.LocalPlayer:WaitForChild("PlayerGui")
-
 	TeddyUI_Premium.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 
 	DropShadowHolder.Name = "DropShadowHolder"
-
 	DropShadowHolder.Parent = TeddyUI_Premium
-
 	DropShadowHolder.AnchorPoint = Vector2.new(0.5, 0.5)
-
 	DropShadowHolder.BackgroundTransparency = 1.000
-
 	DropShadowHolder.BorderSizePixel = 0
-
 	DropShadowHolder.Position = UDim2.new(0.5, 0, 0.5, 0)
-
 	DropShadowHolder.Size = UDim2.new(0, 555, 0, 350)
-
 	DropShadowHolder.ZIndex = 0
 
 	DropShadow.Name = "DropShadow"
-
 	DropShadow.Parent = DropShadowHolder
-
 	DropShadow.AnchorPoint = Vector2.new(0.5, 0.5)
-
 	DropShadow.BackgroundTransparency = 1.000
-
 	DropShadow.BorderSizePixel = 0
-
 	DropShadow.Position = UDim2.new(0.5, 0, 0.5, 0)
-
 	DropShadow.Size = UDim2.new(1, 47, 1, 47)
-
 	DropShadow.ZIndex = 0
-
 	DropShadow.Image = "rbxassetid://6015897843"
-
 	DropShadow.ImageColor3 = Color3.fromRGB(0, 0, 0)
-
 	DropShadow.ImageTransparency = 0.500
-
 	DropShadow.ScaleType = Enum.ScaleType.Slice
-
 	DropShadow.SliceCenter = Rect.new(49, 49, 450, 450)
 
+	-- [LÓGICA DO TEMA PERSONALIZADO]
 	Main.Name = "Main"
-
 	Main.Parent = DropShadowHolder
-
 	Main.AnchorPoint = Vector2.new(0.5, 0.5)
-
-	Main.BackgroundColor3 = Color3.fromRGB(9,9,9)
-
-	Main.BackgroundTransparency = 0.070
-
-	Main.BorderColor3 = Color3.fromRGB(0, 0, 0)
-
-	Main.BorderSizePixel = 0
-
 	Main.Position = UDim2.new(0.5, 0, 0.5, 0)
-
 	Main.Size = UDim2.new(0, 555, 0, 350)
+	Main.BorderSizePixel = 0
+	Main.BorderColor3 = Color3.fromRGB(0, 0, 0)
+	Main.ClipsDescendants = true -- Impede que a imagem saia pelas bordas redondas
+
+	if _G.ThemeID and tostring(_G.ThemeID) ~= "" then
+		-- Se o usuário colocou ID
+		Main.Image = "rbxassetid://" .. tostring(_G.ThemeID)
+		Main.BackgroundColor3 = Color3.fromRGB(255, 255, 255) -- Fundo branco para não alterar a cor da imagem
+		Main.BackgroundTransparency = 0 -- Totalmente visível
+		Main.ScaleType = Enum.ScaleType.Crop -- Corta a imagem para preencher (tipo cover css)
+	else
+		-- Tema Padrão Escuro
+		Main.Image = ""
+		Main.BackgroundColor3 = Color3.fromRGB(9, 9, 9)
+		Main.BackgroundTransparency = 0.070
+	end
 
 	UICorner.Parent = Main
 
 	Top.Name = "Top"
-
 	Top.Parent = Main
-
 	Top.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-
 	Top.BackgroundTransparency = 1.000
-
 	Top.BorderColor3 = Color3.fromRGB(0, 0, 0)
-
 	Top.BorderSizePixel = 0
-
 	Top.Size = UDim2.new(1, 0, 0, 50)
 
 	Line.Name = "Line"
-
 	Line.Parent = Top
-
 	Line.BackgroundColor3 = Color3.fromRGB(120, 0, 0)
-
 	Line.BackgroundTransparency = 0.500
-
 	Line.BorderColor3 = Color3.fromRGB(0, 0, 0)
-
 	Line.BorderSizePixel = 0
-
 	Line.Position = UDim2.new(0, 0, 1, -1)
-
 	Line.Size = UDim2.new(1, 0, 0, 1)
 
 	Left.Name = "Left"
