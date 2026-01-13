@@ -2,11 +2,7 @@ local Library = {}
 
 function Library:TweenInstance(Instance, Time, OldValue, NewValue)
 
-	local rz_Tween = game:GetService("TweenService"):Create(Instance, TweenInfo.new(Time, Enum.EasingStyle.Quad),		{ [OldValue] = NewValue })
-
-	rz_Tween:Play()
-
-	return rz_Tween
+	local rz_Tween = game:GetService("TweenService"):Create(Instance, TweenInfo.new(Time, Enum.EasingStyle.Quad), { [OldValue] = NewValue })	rz_Tween:Play()	return rz_Tween
 
 end
 
@@ -76,9 +72,7 @@ function Library:MakeDraggable(topbarobject, object)
 
 		local Delta = input.Position - DragStart
 
-		local pos = UDim2.new(StartPosition.X.Scale, StartPosition.X.Offset + Delta.X, StartPosition.Y.Scale,
-
-			StartPosition.Y.Offset + Delta.Y)
+		local pos = UDim2.new(StartPosition.X.Scale, StartPosition.X.Offset + Delta.X, StartPosition.Y.Scale, StartPosition.Y.Offset + Delta.Y)
 
 		local Tween = game:GetService("TweenService"):Create(object, TweenInfo.new(0.2), { Position = pos })
 
@@ -135,119 +129,203 @@ end
 function Library:NewWindow(ConfigWindow)
 
 	local ConfigWindow = self:MakeConfig({
-		Title = "Night Mystic v2",
+
+		Title = "Night Mystic",
+
 		Description = "By araujozwx & Mauro",
+
 	}, ConfigWindow or {})
 
 	local TeddyUI_Premium = Instance.new("ScreenGui")
+
 	local DropShadowHolder = Instance.new("Frame")
+
 	local DropShadow = Instance.new("ImageLabel")
-	
-	-- [MODIFICAÇÃO] Main agora é ImageLabel para aceitar o Tema
+
 	local Main = Instance.new("ImageLabel")
-	
+
 	local UICorner = Instance.new("UICorner")
+
 	local Top = Instance.new("Frame")
+
 	local Line = Instance.new("Frame")
+
 	local Left = Instance.new("Folder")
+
 	local NameHub = Instance.new("TextLabel")
+
 	local LogoHub = Instance.new("ImageLabel")
+
 	local Desc = Instance.new("TextLabel")
+
 	local Right = Instance.new("Folder")
+
 	local Frame = Instance.new("Frame")
+
 	local UIListLayout = Instance.new("UIListLayout")
+
 	local UIPadding = Instance.new("UIPadding")
+
 	local Minize = Instance.new("TextButton")
+
 	local Icon = Instance.new("ImageLabel")
+
 	local Large = Instance.new("TextButton")
+
 	local Icon_2 = Instance.new("ImageLabel")
+
 	local Close = Instance.new("TextButton")
+
 	local Icon_3 = Instance.new("ImageLabel")
+
 	local UIStroke = Instance.new("UIStroke")
+
 	local TabFrame = Instance.new("Frame")
+
 	local Line_2 = Instance.new("Frame")
+
 	local SearchFrame = Instance.new("Frame")
+
 	local UICorner_2 = Instance.new("UICorner")
+
 	local IconSearch = Instance.new("ImageLabel")
+
 	local SearchBox = Instance.new("TextBox")
+
 	local ScrollingTab = Instance.new("ScrollingFrame")
+
 	local UIPadding_2 = Instance.new("UIPadding")
+
 	local UIListLayout_2 = Instance.new("UIListLayout")
+
 	local LayoutFrame = Instance.new("Frame")
+
 	local RealLayout = Instance.new("Frame")
+
 	local LayoutList = Instance.new("Folder")
+
 	local UIPageLayout = Instance.new("UIPageLayout")
+
 	local LayoutName = Instance.new("Frame")
+
 	local TextLabel = Instance.new("TextLabel")
+
 	local DropdownZone = Instance.new("Frame")
 
 	TeddyUI_Premium.Name = "TeddyUI_Premium"
+
 	TeddyUI_Premium.Parent = game.Players.LocalPlayer:WaitForChild("PlayerGui")
+
 	TeddyUI_Premium.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 
 	DropShadowHolder.Name = "DropShadowHolder"
+
 	DropShadowHolder.Parent = TeddyUI_Premium
+
 	DropShadowHolder.AnchorPoint = Vector2.new(0.5, 0.5)
+
 	DropShadowHolder.BackgroundTransparency = 1.000
+
 	DropShadowHolder.BorderSizePixel = 0
+
 	DropShadowHolder.Position = UDim2.new(0.5, 0, 0.5, 0)
+
 	DropShadowHolder.Size = UDim2.new(0, 555, 0, 350)
+
 	DropShadowHolder.ZIndex = 0
 
 	DropShadow.Name = "DropShadow"
+
 	DropShadow.Parent = DropShadowHolder
+
 	DropShadow.AnchorPoint = Vector2.new(0.5, 0.5)
+
 	DropShadow.BackgroundTransparency = 1.000
+
 	DropShadow.BorderSizePixel = 0
+
 	DropShadow.Position = UDim2.new(0.5, 0, 0.5, 0)
+
 	DropShadow.Size = UDim2.new(1, 47, 1, 47)
+
 	DropShadow.ZIndex = 0
+
 	DropShadow.Image = "rbxassetid://6015897843"
+
 	DropShadow.ImageColor3 = Color3.fromRGB(0, 0, 0)
+
 	DropShadow.ImageTransparency = 0.500
+
 	DropShadow.ScaleType = Enum.ScaleType.Slice
+
 	DropShadow.SliceCenter = Rect.new(49, 49, 450, 450)
 
-	-- [LÓGICA DO TEMA PERSONALIZADO]
 	Main.Name = "Main"
+
 	Main.Parent = DropShadowHolder
+
 	Main.AnchorPoint = Vector2.new(0.5, 0.5)
+
 	Main.Position = UDim2.new(0.5, 0, 0.5, 0)
+
 	Main.Size = UDim2.new(0, 555, 0, 350)
+
 	Main.BorderSizePixel = 0
+
 	Main.BorderColor3 = Color3.fromRGB(0, 0, 0)
-	Main.ClipsDescendants = true -- Impede que a imagem saia pelas bordas redondas
+
+	Main.ClipsDescendants = true
 
 	if _G.ThemeID and tostring(_G.ThemeID) ~= "" then
-		-- Se o usuário colocou ID
+
 		Main.Image = "rbxassetid://" .. tostring(_G.ThemeID)
-		Main.BackgroundColor3 = Color3.fromRGB(255, 255, 255) -- Fundo branco para não alterar a cor da imagem
-		Main.BackgroundTransparency = 0 -- Totalmente visível
-		Main.ScaleType = Enum.ScaleType.Crop -- Corta a imagem para preencher (tipo cover css)
+
+		Main.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+
+		Main.BackgroundTransparency = 0
+
+		Main.ScaleType = Enum.ScaleType.Crop
+
 	else
-		-- Tema Padrão Escuro
+
 		Main.Image = ""
-		Main.BackgroundColor3 = Color3.fromRGB(9, 9, 9)
-		Main.BackgroundTransparency = 0.070
+
+		Main.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+
+		Main.BackgroundTransparency = 0
+
 	end
 
 	UICorner.Parent = Main
 
 	Top.Name = "Top"
+
 	Top.Parent = Main
+
 	Top.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+
 	Top.BackgroundTransparency = 1.000
+
 	Top.BorderColor3 = Color3.fromRGB(0, 0, 0)
+
 	Top.BorderSizePixel = 0
+
 	Top.Size = UDim2.new(1, 0, 0, 50)
 
 	Line.Name = "Line"
+
 	Line.Parent = Top
+
 	Line.BackgroundColor3 = Color3.fromRGB(120, 0, 0)
+
 	Line.BackgroundTransparency = 0.500
+
 	Line.BorderColor3 = Color3.fromRGB(0, 0, 0)
+
 	Line.BorderSizePixel = 0
+
 	Line.Position = UDim2.new(0, 0, 1, -1)
+
 	Line.Size = UDim2.new(1, 0, 0, 1)
 
 	Left.Name = "Left"
@@ -490,21 +568,15 @@ function Library:NewWindow(ConfigWindow)
 
 		tat_["Name"] = [[Tat]];
 
-		-- Players.noguchihyuga.PlayerGui.TeddyUI_Premium.DropShadowHolder.Main.DropdownZone.Tat.UIStroke
-
 		local suacc = Instance.new("UIStroke", tat_);
 
 		suacc["Transparency"] = 0.5;
 
 		suacc["Color"] = Color3.fromRGB(101, 101, 101);
 
-		-- Players.noguchihyuga.PlayerGui.TeddyUI_Premium.DropShadowHolder.Main.DropdownZone.Tat.UICorner
-
 		local suacc = Instance.new("UICorner", tat_);
 
 		suacc["CornerRadius"] = UDim.new(0, 5);
-
-		-- Players.noguchihyuga.PlayerGui.TeddyUI_Premium.DropShadowHolder.Main.DropdownZone.Tat.TextLabel
 
 		local suacc2 = Instance.new("TextLabel", tat_);
 
@@ -525,8 +597,6 @@ function Library:NewWindow(ConfigWindow)
 		suacc2["BorderColor3"] = Color3.fromRGB(0, 0, 0);
 
 		suacc2["Text"] = [[Are you sure]];
-
-		-- Players.noguchihyuga.PlayerGui.TeddyUI_Premium.DropShadowHolder.Main.DropdownZone.Tat.TextButton
 
 		local btnyes = Instance.new("TextButton", tat_);
 
@@ -556,19 +626,13 @@ function Library:NewWindow(ConfigWindow)
 
 		end)
 
-		-- Players.noguchihyuga.PlayerGui.TeddyUI_Premium.DropShadowHolder.Main.DropdownZone.Tat.TextButton.UICorner
-
 		local thuaaa = Instance.new("UICorner", btnyes);
-
-		-- Players.noguchihyuga.PlayerGui.TeddyUI_Premium.DropShadowHolder.Main.DropdownZone.Tat.TextButton.UIStroke
 
 		local thuaaa = Instance.new("UIStroke", btnyes);
 
 		thuaaa["ApplyStrokeMode"] = Enum.ApplyStrokeMode.Border;
 
 		thuaaa["Color"] = Color3.fromRGB(39, 39, 39);
-
-		-- Players.noguchihyuga.PlayerGui.TeddyUI_Premium.DropShadowHolder.Main.DropdownZone.Tat.TextButton
 
 		local btnno = Instance.new("TextButton", tat_);
 
@@ -600,11 +664,7 @@ function Library:NewWindow(ConfigWindow)
 
 		end)
 
-		-- Players.noguchihyuga.PlayerGui.TeddyUI_Premium.DropShadowHolder.Main.DropdownZone.Tat.TextButton.UICorner
-
 		local thuaa = Instance.new("UICorner", btnno);
-
-		-- Players.noguchihyuga.PlayerGui.TeddyUI_Premium.DropShadowHolder.Main.DropdownZone.Tat.TextButton.UIStroke
 
 		local thuaa = Instance.new("UIStroke", btnno);
 
@@ -736,7 +796,7 @@ function Library:NewWindow(ConfigWindow)
 
 	SearchBox.Font = Enum.Font.GothamBold
 
-	SearchBox.PlaceholderText = "Search section or function"
+	SearchBox.PlaceholderText = "Search"
 
 	SearchBox.Text = ""
 
@@ -782,6 +842,8 @@ function Library:NewWindow(ConfigWindow)
 
 	UIListLayout_2.SortOrder = Enum.SortOrder.LayoutOrder
 
+	UIListLayout_2.Padding = UDim.new(0, 10)
+
 	LayoutFrame.Name = "LayoutFrame"
 
 	LayoutFrame.Parent = Main
@@ -819,30 +881,51 @@ function Library:NewWindow(ConfigWindow)
 	LayoutList.Name = "Layout List"
 
 	LayoutList.Parent = RealLayout
-	-- Lógica de Pesquisa (Adicione isto logo abaixo da definição de LayoutList)
+
 	SearchBox:GetPropertyChangedSignal("Text"):Connect(function()
+
 		local InputText = SearchBox.Text:lower()
 
 		for _, Layout in next, LayoutList:GetChildren() do
+
 			if Layout:IsA("ScrollingFrame") then
+
 				for _, Section in next, Layout:GetChildren() do
+
 					if Section.Name == "Section" then
+
 						local SectionList = Section:FindFirstChild("SectionList")
+
 						if SectionList then
+
 							for _, Element in next, SectionList:GetChildren() do
+
 								if Element:IsA("Frame") and Element:FindFirstChild("Title") then
+
 									if Element.Title.Text:lower():find(InputText) then
+
 										Element.Visible = true
+
 									else
+
 										Element.Visible = false
+
 									end
+
 								end
+
 							end
+
 						end
+
 					end
+
 				end
+
 			end
+
 		end
+
 	end)
 
 	UIPageLayout.Parent = LayoutList
@@ -913,7 +996,7 @@ function Library:NewWindow(ConfigWindow)
 
 	local Tab = {}
 
-	function Tab:T(t)
+	function Tab:T(t, iconid)
 
 		local TabDisable = Instance.new("Frame")
 
@@ -930,6 +1013,12 @@ function Library:NewWindow(ConfigWindow)
 		local UIPadding_3 = Instance.new("UIPadding")
 
 		local UIListLayout_3 = Instance.new("UIListLayout")
+
+		
+
+		local TabIcon = Instance.new("ImageLabel")
+
+		local IconRound = Instance.new("UICorner")
 
 		TabDisable.Name = "TabDisable"
 
@@ -965,6 +1054,52 @@ function Library:NewWindow(ConfigWindow)
 
 		UICorner_4.Parent = Choose_2
 
+		
+
+		TabIcon.Name = "TabIcon"
+
+		TabIcon.Parent = TabDisable
+
+		TabIcon.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+
+		TabIcon.BackgroundTransparency = 1.000
+
+		TabIcon.Position = UDim2.new(0, 12, 0.5, 0)
+
+		TabIcon.AnchorPoint = Vector2.new(0, 0.5)
+
+		TabIcon.Size = UDim2.new(0, 14, 0, 14) 
+
+		TabIcon.ImageColor3 = Color3.fromRGB(255, 255, 255)
+
+		
+
+		IconRound.Parent = TabIcon
+
+		IconRound.CornerRadius = UDim.new(0, 4)
+
+		
+
+		local NamePosX = 15
+
+		if iconid and tostring(iconid) ~= "" then
+
+			TabIcon.Image = iconid
+
+			TabIcon.Visible = true
+
+			NamePosX = 35
+
+		else
+
+			TabIcon.Image = ""
+
+			TabIcon.Visible = false
+
+			NamePosX = 15
+
+		end
+
 		NameTab_2.Name = "NameTab"
 
 		NameTab_2.Parent = TabDisable
@@ -977,9 +1112,9 @@ function Library:NewWindow(ConfigWindow)
 
 		NameTab_2.BorderSizePixel = 0
 
-		NameTab_2.Position = UDim2.new(0, 15, 0, 0)
+		NameTab_2.Position = UDim2.new(0, NamePosX, 0, 0)
 
-		NameTab_2.Size = UDim2.new(1, -15, 1, 0)
+		NameTab_2.Size = UDim2.new(1, -NamePosX, 1, 0)
 
 		NameTab_2.Font = Enum.Font.GothamBold
 
@@ -1059,9 +1194,23 @@ function Library:NewWindow(ConfigWindow)
 
 			Choose_2.Visible = true
 
+			if TabIcon.Visible then
+
+				TabIcon.ImageTransparency = 0
+
+			end
+
 			UIPageLayout:JumpToIndex(0)
 
 			TextLabel.Text = t
+
+		else
+
+			if TabIcon.Visible then
+
+				TabIcon.ImageTransparency = 0.5
+
+			end
 
 		end
 
@@ -1075,6 +1224,12 @@ function Library:NewWindow(ConfigWindow)
 
 					Library:TweenInstance(v.NameTab, 0.3, "TextTransparency", 0.3)
 
+					if v:FindFirstChild("TabIcon") then
+
+						Library:TweenInstance(v.TabIcon, 0.3, "ImageTransparency", 0.5)
+
+					end
+
 					v.Choose.Visible = false
 
 				end
@@ -1082,6 +1237,12 @@ function Library:NewWindow(ConfigWindow)
 			end
 
 			Library:TweenInstance(NameTab_2, 0.2, "TextTransparency", 0)
+
+			if TabIcon.Visible then
+
+				Library:TweenInstance(TabIcon, 0.2, "ImageTransparency", 0)
+
+			end
 
 			UIPageLayout:JumpToIndex(Layout.LayoutOrder)
 
@@ -1609,7 +1770,9 @@ function Library:NewWindow(ConfigWindow)
 
 					Values = {},
 
-					Default = "",
+					Default = {}, 
+
+					Multi = false, 
 
 					Callback = function()
 
@@ -2083,11 +2246,47 @@ function Library:NewWindow(ConfigWindow)
 
 				end)
 
-				local DropFunc = { Value = cfdropdown.Default }
+				TextBox:GetPropertyChangedSignal("Text"):Connect(function()
 
-				function DropFunc:Set(cc)
+					local InputText = TextBox.Text:lower()
 
-					DropFunc.Value = cc or DropFunc.Value
+					for _, item in next, Real_List:GetChildren() do
+
+						if item:IsA("Frame") and item:FindFirstChild("Title") then
+
+							if item.Title.Text:lower():find(InputText) then
+
+								item.Visible = true
+
+							else
+
+								item.Visible = false
+
+							end
+
+						end
+
+					end
+
+				end)
+
+				local DropFunc = { Value = {} }
+
+				if type(cfdropdown.Default) == "string" then
+
+					if cfdropdown.Default ~= "" then
+
+						DropFunc.Value = {cfdropdown.Default}
+
+					end
+
+				elseif type(cfdropdown.Default) == "table" then
+
+					DropFunc.Value = cfdropdown.Default
+
+				end
+
+				function DropFunc:Set(ignored)
 
 					for i, v in next, Real_List:GetChildren() do
 
@@ -2111,19 +2310,17 @@ function Library:NewWindow(ConfigWindow)
 
 					end
 
-					local DropValue = table.concat(DropFunc.Value, ",")
+					local DropValueStr = table.concat(DropFunc.Value, ", ")
 
-					if DropValue == "" then
+					if DropValueStr == "" then
 
-						SelectText.Text = ""
+						SelectText.Text = "None"
 
 					else
 
-						SelectText.Text = DropValue
+						SelectText.Text = DropValueStr
 
 					end
-
-					cfdropdown.Callback(cfdropdown.Multi and DropFunc.Value or table.concat(DropFunc.Value, ""))
 
 				end
 
@@ -2213,35 +2410,45 @@ function Library:NewWindow(ConfigWindow)
 
 					Option2_Click.Activated:Connect(function()
 
+						local currentVal = Title_12.Text
+
 						if cfdropdown.Multi then
 
-							if Option2.BackgroundTransparency < 0.950 then
+							if table.find(DropFunc.Value, currentVal) then
 
-								for i, v in next, DropFunc.Value do
+								for i, val in pairs(DropFunc.Value) do
 
-									if v == Title_12.Text then
+									if val == currentVal then
 
 										table.remove(DropFunc.Value, i)
+
+										break
 
 									end
 
 								end
 
-								DropFunc:Set(DropFunc.Value)
-
 							else
 
-								table.insert(DropFunc.Value, Title_12.Text)
-
-								DropFunc:Set(DropFunc.Value)
+								table.insert(DropFunc.Value, currentVal)
 
 							end
 
 						else
 
-							DropFunc.Value = { Title_12.Text }
+							DropFunc.Value = {currentVal}
 
-							DropFunc:Set(DropFunc.Value)
+						end
+
+						DropFunc:Set()
+
+						if cfdropdown.Multi then
+
+							cfdropdown.Callback(DropFunc.Value)
+
+						else
+
+							cfdropdown.Callback(DropFunc.Value[1])
 
 						end
 
@@ -2274,15 +2481,19 @@ function Library:NewWindow(ConfigWindow)
 					end
 
 				end
+			    DropFunc:Refresh(cfdropdown.Values)
+                DropFunc:Set()
+                if #DropFunc.Value > 0 then
+                    if cfdropdown.Multi then
+                        cfdropdown.Callback(DropFunc.Value)
+                    else
+                        cfdropdown.Callback(DropFunc.Value[1])
+                    end
+                end
 
-				DropFunc:Refresh(cfdropdown.Values)
+                return DropFunc
 
-				DropFunc:Set(typeof(cfdropdown.Default) == "string" and { cfdropdown.Default } or cfdropdown.Default)
-
-				return DropFunc
-
-			end
-
+            end
 			function SectionFunc:AddInput(cftextbox)
 
 				local cftextbox = Library:MakeConfig({
@@ -2739,9 +2950,7 @@ function Library:NewWindow(ConfigWindow)
 
 					if Dragging and Input.UserInputType == Enum.UserInputType.MouseMovement then
 
-						local SizeScale = math.clamp(
-
-							(Input.Position.X - SliderFrame.AbsolutePosition.X) / SliderFrame.AbsoluteSize.X, 0, 1)
+						local SizeScale = math.clamp((Input.Position.X - SliderFrame.AbsolutePosition.X) / SliderFrame.AbsoluteSize.X, 0, 1)
 
 						SliderFunc:Set(cfslider.Min + ((cfslider.Max - cfslider.Min) * SizeScale))
 
@@ -2945,6 +3154,91 @@ function Library:NewWindow(ConfigWindow)
 
 			end
 
+			function SectionFunc:AddDiscord(DiscordTitle, InviteCode)
+				local DiscordCard = Instance.new("Frame")
+				local UICorner = Instance.new("UICorner")
+				local Icon = Instance.new("ImageLabel")
+				local Title = Instance.new("TextLabel")
+				local SubTitle = Instance.new("TextLabel")
+				local JoinBtn = Instance.new("TextButton")
+				local BtnCorner = Instance.new("UICorner")
+
+				-- Ajuste para a sua UI: SectionList é o pai
+				DiscordCard.Name = "DiscordCard"
+				DiscordCard.Parent = SectionList 
+				DiscordCard.BackgroundColor3 = Color3.fromRGB(20, 20, 20) -- Cor ajustada para combinar com o tema escuro
+				DiscordCard.BackgroundTransparency = 0.4
+				DiscordCard.BorderSizePixel = 0
+				DiscordCard.Size = UDim2.new(1, 0, 0, 65)
+
+				UICorner.CornerRadius = UDim.new(0, 9)
+				UICorner.Parent = DiscordCard
+
+				Icon.Parent = DiscordCard
+				Icon.BackgroundTransparency = 1
+				Icon.Position = UDim2.new(0, 10, 0, 10)
+				Icon.Size = UDim2.new(0, 45, 0, 45)
+				Icon.Image = "rbxassetid://105245380363493" -- Ícone do Discord
+
+				Title.Parent = DiscordCard
+				Title.BackgroundTransparency = 1
+				Title.Position = UDim2.new(0, 65, 0, 15)
+				Title.Size = UDim2.new(1, -140, 0, 20)
+				Title.Font = Enum.Font.GothamBold
+				Title.Text = DiscordTitle or "Night Mystic"
+				Title.TextColor3 = Color3.fromRGB(255, 255, 255)
+				Title.TextSize = 14
+				Title.TextXAlignment = Enum.TextXAlignment.Left
+
+				SubTitle.Parent = DiscordCard
+				SubTitle.BackgroundTransparency = 1
+				SubTitle.Position = UDim2.new(0, 65, 0, 32)
+				SubTitle.Size = UDim2.new(1, -140, 0, 20)
+				SubTitle.Font = Enum.Font.Gotham
+				SubTitle.Text = "Clique para entrar no servidor"
+				SubTitle.TextColor3 = Color3.fromRGB(180, 180, 180)
+				SubTitle.TextSize = 11
+				SubTitle.TextXAlignment = Enum.TextXAlignment.Left
+
+				JoinBtn.Name = "JoinBtn"
+				JoinBtn.Parent = DiscordCard
+				JoinBtn.BackgroundColor3 = Color3.fromRGB(88, 101, 242) -- Azul Discord
+				JoinBtn.Position = UDim2.new(1, -75, 0, 17)
+				JoinBtn.Size = UDim2.new(0, 65, 0, 30)
+				JoinBtn.Font = Enum.Font.GothamBold
+				JoinBtn.Text = "Join"
+				JoinBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+				JoinBtn.TextSize = 13
+
+				BtnCorner.CornerRadius = UDim.new(0, 4)
+				BtnCorner.Parent = JoinBtn
+
+				JoinBtn.MouseButton1Click:Connect(function()
+					if setclipboard then 
+                        setclipboard("https://discord.gg/" .. InviteCode) 
+                    end
+					
+					local req = (syn and syn.request) or (http and http.request) or http_request or request
+					if req then
+						pcall(function()
+                            req({
+                                Url = "http://127.0.0.1:6463/rpc?v=1",
+                                Method = "POST",
+                                Headers = { ["Content-Type"] = "application/json", ["Origin"] = "https://discord.com" },
+                                Body = game:GetService("HttpService"):JSONEncode({
+                                    cmd = "INVITE_BROWSER",
+                                    nonce = game:GetService("HttpService"):GenerateGUID(false),
+                                    args = { code = InviteCode }
+                                })
+                            })
+                        end)
+					end
+					JoinBtn.Text = "Copiado!"
+					task.wait(2)
+					JoinBtn.Text = "Join"
+				end)
+			end
+
 			return SectionFunc
 
 		end
@@ -2955,13 +3249,9 @@ function Library:NewWindow(ConfigWindow)
 
 	local G2L = {};
 
-	-- StarterGui.ScreenGui
-
 	G2L["1"] = Instance.new("ScreenGui", game:GetService("Players").LocalPlayer:WaitForChild("PlayerGui"));
 
 	G2L["1"]["ZIndexBehavior"] = Enum.ZIndexBehavior.Sibling;
-
-	-- StarterGui.ScreenGui.ImageButton
 
 	G2L["2"] = Instance.new("ImageButton", G2L["1"]);
 
@@ -2971,31 +3261,27 @@ function Library:NewWindow(ConfigWindow)
 
 	self:MakeDraggable(G2L["2"],G2L["2"])
 
-	-- [ERROR] cannot convert ImageContent, please report to "https://github.com/uniquadev/GuiToLuaConverter/issues"
-
 	G2L["2"]["BackgroundColor3"] = Color3.fromRGB(255, 255, 255);
 
-	G2L["2"]["Image"] = [[rbxassetid://125782450805781]];
+	G2L["2"]["Image"] = [[rbxassetid://88837793631668]];
 
 	G2L["2"]["Size"] = UDim2.new(0, 50, 0, 50);
 
 	G2L["2"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
 
-	G2L["2"]["Position"] = UDim2.new(0.26651, 0, 0.43687, 0);
+	G2L["2"]["AnchorPoint"] = Vector2.new(0, 0)
 
-	-- StarterGui.ScreenGui.ImageButton.UICorner
+    G2L["2"]["Position"] = UDim2.new(0, 30, 0, 30)
 
 	G2L["3"] = Instance.new("UICorner", G2L["2"]);
 
 	G2L["3"]["CornerRadius"] = UDim.new(1, 0);
 
-	-- StarterGui.ScreenGui.ImageButton.UIStroke
-
 	G2L["4"] = Instance.new("UIStroke", G2L["2"]);
 
 	G2L["4"]["Thickness"] = 2;
 
-	G2L["4"]["Color"] = Color3.fromRGB(255, 0, 0); -- AQUI: Contorno alterado para Vermelho Puro
+	G2L["4"]["Color"] = Color3.fromRGB(255, 255, 255);
 
 	G2L["2"].MouseButton1Click:Connect(function()
 
