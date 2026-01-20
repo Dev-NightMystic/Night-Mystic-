@@ -40,7 +40,7 @@ local function Main(Settings)
 
         else
 
-            Run("https://pastefy.app/XjK1JcPV/raw")
+            Run("https://pastefy.app/5uC1vtzP/raw")
 
         end
 
