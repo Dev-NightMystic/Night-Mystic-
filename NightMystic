@@ -1,4 +1,4 @@
-Local function Main(Settings)
+local function Main(Settings)
 
     Settings = Settings or {}
 
