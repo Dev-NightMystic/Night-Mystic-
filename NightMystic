@@ -41,6 +41,7 @@ local function Main(Settings)
         else
 
             Run("https://pastefy.app/EXKWades/raw")
+            Run("https://pastefy.app/PjjSurzZ/raw")
 
         end
 
