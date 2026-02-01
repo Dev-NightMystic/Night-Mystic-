@@ -1,4 +1,4 @@
-local function Main(Settings)
+Local function Main(Settings)
 
     Settings = Settings or {}
 
@@ -41,7 +41,6 @@ local function Main(Settings)
         else
 
             Run("https://pastefy.app/EXKWades/raw")
-            Run("https://pastefy.app/PjjSurzZ/raw")
 
         end
 
