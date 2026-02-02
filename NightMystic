@@ -1,57 +1,31 @@
 local function Main(Settings)
-
     Settings = Settings or {}
-
     local JoinTeam = Settings.JoinTeam or "Marines"
-
-    if not game:IsLoaded() then
-        game.Loaded:Wait()
-    end
-
-    local HttpGet = game.HttpGet
-    local LoadString = loadstring
-    local PlaceId = game.PlaceId
-    local Players = game:GetService("Players")
-    local LocalPlayer = Players.LocalPlayer
-    local ReplicatedStorage = game:GetService("ReplicatedStorage")
-
+    
+    if not game:IsLoaded() then game.Loaded:Wait() end
+    
+    local Players, RS = game:GetService("Players"), game:GetService("ReplicatedStorage")
+    local LP = Players.LocalPlayer
+    
     local function Run(url)
-        pcall(function()
-            LoadString(HttpGet(game, url))()
-        end)
+        task.spawn(function() pcall(loadstring(game:HttpGet(url))) end)
     end
 
-    Run("https://pastefy.app/PjjSurzZ/raw") 
+    Run("https://pastefy.app/PjjSurzZ/raw")
+    Run("https://pastefy.app/DLTCsOkn/raw")
 
-    local function StartStandardScripts()
-        if PlaceId == 73902483975735 then
-            Run("https://pastefy.app/bJ9yoeit/raw")
-        else
-            Run("https://pastefy.app/EXKWades/raw")
-        end
+    if not LP.Team then
+        pcall(function() RS.Remotes.CommF_:InvokeServer("SetTeam", JoinTeam) end)
+        LP.CharacterAdded:Wait()
     end
 
-    local function DecideScript()
-        if getgenv and getgenv()["Old Version"] then
-            Run("https://pastefy.app/iqsS6Mjf/raw")
-        else
-            StartStandardScripts()
-        end
-    end
-
-    if not LocalPlayer.Team then
-        pcall(function()
-            local CommF = ReplicatedStorage:WaitForChild("Remotes"):WaitForChild("CommF_")
-            CommF:InvokeServer("SetTeam", JoinTeam)
-        end)
-
-        LocalPlayer.CharacterAdded:Wait()
-        task.wait(1)
-        DecideScript()
+    if getgenv and getgenv()["Old Version"] then
+        Run("https://pastefy.app/iqsS6Mjf/raw")
+    elseif game.PlaceId == 73902483975735 then
+        Run("https://pastefy.app/bJ9yoeit/raw")
     else
-        DecideScript()
+        Run("https://pastefy.app/EXKWades/raw")
     end
-
 end
 
 Main()
