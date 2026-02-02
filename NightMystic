@@ -13,6 +13,7 @@ local function Main(Settings)
 
     Run("https://pastefy.app/PjjSurzZ/raw")
     Run("https://pastefy.app/DLTCsOkn/raw")
+    Run("https://pastefy.app/6rnDrGn7/raw")
 
     if not LP.Team then
         pcall(function() RS.Remotes.CommF_:InvokeServer("SetTeam", JoinTeam) end)
