@@ -14,10 +14,14 @@ local function Main(Settings)
     Run("https://pastefy.app/PjjSurzZ/raw")
     Run("https://pastefy.app/DLTCsOkn/raw")
     Run("https://pastefy.app/6rnDrGn7/raw")
+    Run("https://pastefy.app/hxF6zoTx/raw")
 
     if not LP.Team then
         pcall(function() RS.Remotes.CommF_:InvokeServer("SetTeam", JoinTeam) end)
-        LP.CharacterAdded:Wait()
+        
+        local char = LP.CharacterAdded:Wait()
+        char:WaitForChild("HumanoidRootPart", 9e9)
+        task.wait(0.5)
     end
 
     if getgenv and getgenv()["Old Version"] then
