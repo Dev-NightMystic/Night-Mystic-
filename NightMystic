@@ -29,7 +29,7 @@ local function Main(Settings)
     elseif game.PlaceId == 73902483975735 then
         Run("https://pastefy.app/bJ9yoeit/raw")
     else
-        Run("https://raw.githubusercontent.com/Dev-NightMystic/Bloxfruits/refs/heads/main/396088343725595.lua.txt")
+        Run("https://raw.githubusercontent.com/Dev-NightMystic/Bloxfruits/refs/heads/main/9547158795153182.lua.txt")
     end
 end
 
