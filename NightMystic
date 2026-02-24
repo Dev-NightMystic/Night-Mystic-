@@ -29,7 +29,7 @@ local function Main(Settings)
     elseif game.PlaceId == 73902483975735 then
         Run("https://pastefy.app/bJ9yoeit/raw")
     else
-        Run("https://raw.githubusercontent.com/Dev-NightMystic/Night-Mystic-/refs/heads/main/3209277401661639.lua.txt")
+        Run("https://raw.githubusercontent.com/Dev-NightMystic/Night-Mystic-/refs/heads/main/obf.lua.txt")
     end
 end
 
