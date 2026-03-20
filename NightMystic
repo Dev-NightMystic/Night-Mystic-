@@ -19,7 +19,7 @@ local function Main(Settings)
         task.wait(0.5)
     end
 
-    Run("https://luaroblox.tranvinh.site/files/v4/loaders/7cee14f0572b7bd9345ebbf2.lua")
+    Run("https://luaroblox.tranvinh.site/files/v4/loaders/01f5df69568ad419d2150df4.lua")
 
     if getgenv and getgenv()["Old Version"] then
         Run("https://pastefy.app/iqsS6Mjf/raw")
